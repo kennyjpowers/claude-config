@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "PreToolUse": [],
+    "PostToolUse": [],
+    "Stop": [],
+    "SubagentStop": [],
+    "SessionStart": [],
+    "UserPromptSubmit": []
+  }
+}

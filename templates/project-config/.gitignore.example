@@ -1,0 +1,13 @@
+# Claude Code local configuration
+.claude/settings.local.json
+CLAUDE.local.md
+
+# Environment variables
+.env
+.env.*
+
+# Secrets
+secrets/
+credentials/
+**/*.key
+**/*.pem

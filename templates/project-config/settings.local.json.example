@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": []
+  },
+  "environmentVariables": {
+    "EDITOR": "code",
+    "MY_CUSTOM_VAR": "value"
+  }
+}

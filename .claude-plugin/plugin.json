@@ -1,0 +1,13 @@
+{
+  "name": "claude-config",
+  "version": "1.0.0",
+  "description": "Best practice configuration templates and utilities for Claude Code",
+  "author": "Kenneth Priester",
+  "repository": "https://github.com/kennethpriester/claude-config",
+  "keywords": [
+    "claude-code",
+    "configuration",
+    "templates",
+    "best-practices"
+  ]
+}
