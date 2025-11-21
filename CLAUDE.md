@@ -1,0 +1,281 @@
+# Claude Config - AI-Assisted Development Workflow
+
+## Project Overview
+
+Claude Config is a hybrid configuration system that provides a complete end-to-end feature development lifecycle for AI-assisted development. It layers custom workflow commands on top of ClaudeKit (30+ agents, 20+ commands, 25+ hooks) and Claude Code's official CLI.
+
+**Version:** 1.1.0 (November 21, 2025)
+
+## Architecture
+
+Three-layer system:
+1. **Claude Code (Official)** - Base CLI, plugin system, MCP integration
+2. **ClaudeKit (npm)** - 30+ specialized agents, workflow commands, intelligent hooks
+3. **Custom Commands (this repo)** - Domain-specific workflow extensions
+
+## Core Workflow
+
+Complete feature lifecycle in 5 phases:
+
+```
+IDEATION → SPECIFICATION → DECOMPOSITION → IMPLEMENTATION → COMPLETION
+```
+
+### Phase 1: Ideation
+- **Command:** `/ideate <task-brief>`
+- **Output:** `specs/<slug>/01-ideation.md`
+- **Purpose:** Enforce complete investigation before code changes
+- **Includes:** Intent, pre-reading, codebase mapping, root cause analysis, research, clarifications
+
+### Phase 2: Specification
+- **Command:** `/ideate-to-spec <path-to-ideation>`
+- **Output:** `specs/<slug>/02-specification.md`
+- **Purpose:** Transform ideation into validated technical specification
+- **Process:** Extract decisions → build spec → validate completeness
+
+### Phase 3: Decomposition
+- **Command:** `/spec:decompose <path-to-spec>`
+- **Output:** `specs/<slug>/03-tasks.md` + STM tasks
+- **Purpose:** Break specification into actionable tasks
+- **Critical:** Tasks tagged with `feature:<slug>` for filtering
+- **Pattern:** Full implementation details copied into tasks (NOT summaries)
+
+### Phase 4: Implementation
+- **Command:** `/spec:execute <path-to-spec>`
+- **Output:** `specs/<slug>/04-implementation.md`
+- **Purpose:** Implement tasks incrementally with session continuity
+- **Process:** For each task: implement → test → code review → fix → commit
+- **Tracks:** Progress, files modified, tests added, known issues, next steps
+
+### Phase 5: Completion
+- **Commands:** `/git:commit`, `/spec:doc-update`, `/git:push`
+- **Purpose:** Finalize changes, update documentation, push to remote
+
+## Key Commands
+
+### Custom Commands (3)
+| Command | Purpose |
+|---------|---------|
+| `/ideate <task-brief>` | Structured investigation workflow |
+| `/ideate-to-spec <path>` | Transform ideation → validated spec |
+| `/spec:doc-update <path>` | Review docs with parallel agents |
+
+### Command Overrides (4)
+Enhanced versions of ClaudeKit commands:
+
+| Command | Enhancement |
+|---------|------------|
+| `/spec:create <desc>` | Feature-directory aware with output path detection |
+| `/spec:decompose <path>` | Extracts feature slug, tags STM tasks |
+| `/spec:execute <path>` | Session continuity with implementation summary |
+| `/spec:migrate` | Convert old flat structure to feature directories |
+
+### Progress Tracking
+```bash
+# View all tasks for a feature
+stm list --pretty --tag feature:<slug>
+
+# View by status
+stm list --status pending --tag feature:<slug>
+stm list --status done --tag feature:<slug>
+```
+
+## Document Organization
+
+**Feature-Based Directories** - All docs for a feature in one place:
+
+```
+specs/<feature-slug>/
+├── 01-ideation.md          # Investigation & research
+├── 02-specification.md     # Technical specification
+├── 03-tasks.md             # Task breakdown
+└── 04-implementation.md    # Progress tracking
+```
+
+**Benefits:**
+- Single source of truth per feature
+- Clear lifecycle progression (01 → 02 → 03 → 04)
+- Easy to find related documents
+- Git-friendly tracking
+
+## Important Conventions
+
+### Content Preservation Pattern
+**CRITICAL:** When creating tasks, copy full implementation details from spec - DO NOT summarize or reference.
+
+```bash
+# WRONG ❌
+stm add "Task" --details "See spec section 3"
+
+# CORRECT ✅
+stm add "Task" --details "[Full code blocks and details copied here]"
+```
+
+### Task Tagging
+All tasks MUST be tagged with `feature:<slug>`:
+```bash
+stm add "Task" --tags "feature:my-feature,phase1,high-priority"
+```
+
+### Configuration Hierarchy
+5-tier precedence (highest to lowest):
+1. Enterprise policies
+2. CLI arguments
+3. Local settings (`.claude/settings.local.json` - gitignored)
+4. Project settings (`.claude/settings.json` - committed)
+5. User settings (`~/.claude/settings.json` - global)
+
+### Specification Requirements
+Valid specs must include 17 sections:
+- Title, status, overview, problem, goals, non-goals
+- Dependencies, design, UX, testing, performance, security
+- Documentation, phases, open questions, references
+- NO time/effort estimations
+
+### Testing Convention
+- Each test has purpose comment explaining why it exists
+- Tests validate real behavior, not just passing
+- Include edge cases to catch regressions
+- Minimum 80% coverage on business logic
+
+### Code Review Pattern
+Two-pass review required:
+1. **Completeness Check** - All spec requirements implemented?
+2. **Quality Check** - Code quality, security, error handling, coverage
+
+Tasks marked DONE only when:
+- Implementation COMPLETE
+- All CRITICAL issues fixed
+- All tests passing
+- Quality standards met
+
+### Commit Convention
+Follow conventional commits:
+```
+<type>(<scope>): <description>
+
+<body>
+<footer>
+```
+Types: feat, fix, docs, style, refactor, test, chore
+
+## Directory Structure
+
+```
+claude-config/
+├── .claude/
+│   ├── commands/              # Custom slash commands
+│   │   ├── ideate.md
+│   │   ├── ideate-to-spec.md
+│   │   └── spec/              # Spec command overrides
+│   ├── agents/                # Custom agents (uses ClaudeKit)
+│   ├── settings.json          # Project settings (committed)
+│   ├── settings.local.json    # Local overrides (gitignored)
+│   └── README.md
+├── templates/
+│   ├── project-config/        # Team-level templates
+│   └── user-config/           # Personal templates
+├── specs/                     # Feature specifications
+│   └── <feature-slug>/        # Feature directory
+├── docs/                      # Documentation
+├── install.sh                 # Automated installer
+└── CLAUDE.md                  # This file
+```
+
+## ClaudeKit Agents Available
+
+**Build Tools:** webpack-expert, vite-expert
+**Languages:** typescript-expert, typescript-build-expert, typescript-type-expert
+**Frontend:** react-expert, react-performance-expert, nextjs-expert, css-styling-expert, accessibility-expert
+**Testing:** testing-expert, jest-testing-expert, vitest-testing-expert, playwright-expert
+**Database:** database-expert, postgres-expert, mongodb-expert
+**DevOps:** docker-expert, github-actions-expert, devops-expert, git-expert
+**Specialized:** ai-sdk-expert, nestjs-expert, kafka-expert, loopback-expert, nodejs-expert, code-review-expert, refactoring-expert, research-expert
+
+## Configuration Hooks
+
+From `settings.json.example`:
+
+```json
+{
+  "PreToolUse": ["file-guard"],
+  "PostToolUse": ["typecheck-changed", "lint-changed", "test-changed"],
+  "Stop": ["create-checkpoint", "check-todos"],
+  "UserPromptSubmit": ["thinking-level"]
+}
+```
+
+## Installation Patterns
+
+**User/Global:** `./install.sh user` → Available in all projects
+**Project/Team:** `cd /project && /path/to/install.sh project` → This project only
+**Hybrid:** Both work together via configuration hierarchy
+
+## Optional Enhancements
+
+**Recommended:** Install simple-task-master for persistent task tracking:
+```bash
+npm install -g simple-task-master
+```
+
+## Quick Reference
+
+### Standard Workflow
+```bash
+/ideate <task-brief>
+/ideate-to-spec specs/<slug>/01-ideation.md
+/spec:decompose specs/<slug>/02-specification.md
+/spec:execute specs/<slug>/02-specification.md
+stm list --pretty --tag feature:<slug>  # Track progress
+/spec:doc-update specs/<slug>/02-specification.md
+/git:commit
+/git:push
+```
+
+### Quick Start (Skip Ideation)
+```bash
+/spec:create <description>
+/spec:decompose specs/<slug>/02-specification.md
+/spec:execute specs/<slug>/02-specification.md
+```
+
+### Migrate Existing Project
+```bash
+/spec:migrate
+```
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `README.md` | Comprehensive guide |
+| `CHANGELOG.md` | Version history |
+| `research.md` | Design validation and best practices |
+| `.claude/README.md` | Component documentation |
+| `docs/INSTALLATION_GUIDE.md` | Detailed installation guidance |
+| `templates/*/CLAUDE.md` | Context templates |
+
+## Best Practices
+
+1. **Security First** - Enable file-guard, never commit secrets
+2. **Team Collaboration** - Commit settings.json and CLAUDE.md, gitignore local overrides
+3. **Content Preservation** - Copy full details into tasks, not summaries
+4. **Task Organization** - Always tag with `feature:<slug>`
+5. **Session Continuity** - `/spec:execute` reads previous progress
+6. **Documentation Updates** - Use `/spec:doc-update` after implementation
+
+## Common Issues
+
+**Tasks not showing in STM?** Ensure simple-task-master is installed globally
+**Hooks not running?** Check settings precedence (local overrides project)
+**Migration needed?** Use `/spec:migrate` to convert old structure
+
+## Version History
+
+**v1.1.0 (Nov 21, 2025):**
+- Feature-based directory structure
+- Removed `/spec:progress` (use STM instead)
+- STM task tagging with `feature:<slug>`
+- Session continuity in `/spec:execute`
+- Migration command `/spec:migrate`
+- Enhanced overrides for spec commands
