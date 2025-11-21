@@ -1,5 +1,119 @@
 # Changelog
 
+## [1.2.0] - 2025-11-21
+
+### Added
+
+- **Post-Implementation Feedback Workflow System** - Complete feedback processing lifecycle
+  - `/spec:feedback` - New command for structured feedback processing
+    - Single-feedback-item workflow with interactive decisions
+    - Code-aware exploration of affected areas (Explore agent integration)
+    - Optional research-expert consultation for solution approaches
+    - Batched interactive questions (implement/defer/out-of-scope)
+    - Targeted spec updates with changelog entries for traceability
+    - Decision log in `05-feedback.md` with complete audit trail
+    - STM task creation for deferred feedback items
+  - `05-feedback.md` - New document format for feedback decision logs
+    - Chronological feedback entries with auto-numbering
+    - Code exploration findings from targeted investigation
+    - Research insights (when research-expert consulted)
+    - Decisions made with complete rationale
+    - Actions taken tracking (spec updated, task created, or logged only)
+
+- **Incremental Decompose Mode** - Smart task creation that preserves completed work
+  - Detects new changelog entries since last decompose (timestamp comparison)
+  - Preserves completed tasks from STM (no duplication of finished work)
+  - Creates only new tasks for changed requirements from changelog
+  - Maintains task numbering continuity across decompose sessions (2.7 → 2.8)
+  - Re-decompose metadata section in `03-tasks.md` tracks session history
+  - Task status visualization with emoji markers (✅ DONE, 🔄 UPDATED, ⏳ NEW)
+  - Automatic mode detection: full (first run), incremental (changes), skip (no changes)
+
+- **Resume Execution Capability** - Session continuity across multiple implementation runs
+  - Session detection from `04-implementation.md` with automatic resume
+  - Skips completed tasks automatically (reads from implementation summary)
+  - Session-based progress tracking (Session 1, Session 2, etc.)
+  - Cross-session context provided to all implementation agents
+  - Conflict detection for spec changes after task completion
+  - STM status cross-reference with auto-reconciliation
+  - Session markers with metadata (date, time, trigger, related feedback)
+
+### Changed
+
+- **Enhanced `/spec:decompose`** - Now supports incremental mode (backward compatible)
+  - Automatic mode detection via changelog timestamp analysis
+  - Queries STM for existing task status to preserve completed work
+  - Filters tasks into three categories: preserve (done), update (in-progress), add (new)
+  - Appends re-decompose metadata section to `03-tasks.md` for history tracking
+  - Original full decompose behavior preserved when no existing tasks found
+
+- **Enhanced `/spec:execute`** - Now supports resume capability (backward compatible)
+  - Detects previous implementation sessions from `04-implementation.md`
+  - Displays session info and execution plan (completed/in-progress/pending counts)
+  - Appends new sessions to implementation summary (preserves complete history)
+  - Provides agents with previous session context for informed decisions
+  - Original fresh start behavior preserved for first-time execution
+
+- **Updated Specification Format** - Section 18 standardized for Changelog
+  - Feedback-driven changes logged in spec changelog with structured entries
+  - Changelog entries reference feedback log for complete traceability
+  - Clear audit trail: feedback → decision → spec change → implementation
+
+### Workflow Integration
+
+New feedback loop integrated into complete 6-phase lifecycle:
+
+```
+IDEATION → SPECIFICATION → DECOMPOSITION → IMPLEMENTATION
+                                              ↓
+                                    Manual Testing discovers issue
+                                              ↓
+                                      FEEDBACK (new phase)
+                                   /spec:feedback (one item at a time)
+                                              ↓
+                               ┌──────────────┴──────────────┐
+                               ↓                             ↓
+                        Implement Now                  Defer/Out-of-Scope
+                     (Update spec changelog)           (Create STM task or log)
+                               ↓
+                     /spec:decompose (incremental mode)
+                   (Preserves completed, adds only new)
+                               ↓
+                     /spec:execute (resume mode)
+                   (Continues from previous session)
+                               ↓
+                          COMPLETION
+```
+
+### Benefits
+
+- **Structured Iteration** - Clear workflow for processing feedback after implementation
+- **Intelligent Re-execution** - No duplicate work when re-running decompose/execute commands
+- **Decision Traceability** - Complete record of why changes were made with rationale
+- **Session Continuity** - Resume implementation across multiple sessions without losing context
+- **Flexible Feedback Handling** - Implement now, defer for later, or mark out-of-scope
+- **Code-Aware Decisions** - Exploration findings inform decision-making with targeted investigation
+- **Research Integration** - Optional expert consultation for complex feedback items
+- **Task Management** - Deferred feedback tracked in STM for future work
+
+### Documentation
+
+- Enhanced `/spec:feedback` command documentation with examples and edge cases
+- Updated `/spec:decompose` docs with incremental mode explanation
+- Updated `/spec:execute` docs with resume capability details
+- Created comprehensive user guide (500+ lines, 9 sections, 4 scenarios)
+- Created complete API documentation with TypeScript schemas
+- Updated README.md with 6-phase workflow including feedback phase
+- Updated CLAUDE.md to v1.2.0 with new capabilities
+- Created `docs/DESIGN_RATIONALE.md` - Design validation and best practices
+
+### Files Added
+
+- `.claude/commands/spec/feedback.md` - Complete feedback command
+- `docs/guides/feedback-workflow-guide.md` - Comprehensive user guide
+- `docs/api/feedback-workflow.md` - API specification with schemas
+- `docs/DESIGN_RATIONALE.md` - Design decisions and research
+
 ## [1.1.0] - 2025-11-21
 
 ### Added

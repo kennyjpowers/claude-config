@@ -21,14 +21,15 @@ All three layers work together seamlessly in Claude Code.
 - Automated quality assurance and error prevention
 
 ### Custom Extensions (this repo)
-- 3 custom workflow commands:
+- 4 custom workflow commands:
   - **/ideate**: Structured ideation with comprehensive documentation
   - **/ideate-to-spec**: Transform ideation into validated specification
+  - **/spec:feedback**: Post-implementation feedback with interactive decisions
   - **/spec:doc-update**: Parallel documentation review based on specs
 - 4 enhanced spec command overrides (replace ClaudeKit versions):
   - **/spec:create**: Detects output path and creates specs in feature directories
-  - **/spec:decompose**: Extracts slug and tags STM tasks with `feature:<slug>`
-  - **/spec:execute**: Creates/updates implementation summary with session history
+  - **/spec:decompose**: Incremental mode preserves completed work, tags STM tasks
+  - **/spec:execute**: Session resume capability with implementation tracking
   - **/spec:migrate**: Migrates existing specs to feature-directory structure
 - Complete end-to-end workflow from ideation to deployment
 - Example configurations for teams and individuals
@@ -114,7 +115,8 @@ specs/
     ├── 01-ideation.md          # Ideation and research
     ├── 02-specification.md     # Validated specification
     ├── 03-tasks.md             # Task breakdown
-    └── 04-implementation.md    # Implementation summary
+    ├── 04-implementation.md    # Implementation summary
+    └── 05-feedback.md          # Post-implementation feedback log
 ```
 
 **Benefits:**
@@ -130,7 +132,8 @@ specs/add-user-auth-jwt/
 ├── 01-ideation.md          # Created by /ideate
 ├── 02-specification.md     # Created by /ideate-to-spec → /spec:create
 ├── 03-tasks.md             # Created by /spec:decompose
-└── 04-implementation.md    # Created by /spec:execute
+├── 04-implementation.md    # Created by /spec:execute
+└── 05-feedback.md          # Created by /spec:feedback (after testing)
 ```
 
 ## Repository Structure
@@ -164,7 +167,9 @@ claude-config/
 │
 ├── install.sh                        # Installation script
 ├── README.md                         # This file
-└── research.md                       # Detailed research & best practices
+└── docs/
+    ├── DESIGN_RATIONALE.md          # Design validation & best practices
+    └── ...
 ```
 
 ## Understanding the Hybrid Approach
@@ -225,6 +230,21 @@ Transform an ideation document into a validated, implementation-ready specificat
 
 **Usage:** `/ideate-to-spec docs/ideation/add-proxy-config-to-figma-plugin.md`
 
+#### /spec:feedback
+Process ONE specific piece of post-implementation feedback from testing or usage. This command:
+1. Validates prerequisites (implementation must exist)
+2. Prompts for detailed feedback description
+3. Explores relevant code with targeted investigation
+4. Optionally consults research-expert for solution approaches
+5. Guides through interactive decisions (implement/defer/out-of-scope)
+6. Updates spec changelog for "implement now" decisions
+7. Creates STM tasks for deferred feedback
+8. Logs all decisions in `05-feedback.md`
+
+Integrates with incremental `/spec:decompose` and resume `/spec:execute` for seamless iteration.
+
+**Usage:** `/spec:feedback specs/my-feature/02-specification.md`
+
 #### /spec:doc-update
 Review all documentation to identify what needs to be updated based on a new specification file. Launches parallel documentation expert agents to review each doc file for:
 - Deprecated content
@@ -243,14 +263,18 @@ Enhanced version that detects output paths and organizes specs in feature direct
 **Usage:** `/spec:create Add user authentication with JWT tokens`
 
 #### /spec:decompose
-Enhanced version that extracts feature slugs and tags all STM tasks with `feature:<slug>` for easy filtering. Creates task breakdown in `specs/<slug>/03-tasks.md`.
+Enhanced version with **incremental mode** that detects changelog updates and creates only new tasks while preserving completed work. Extracts feature slugs and tags all STM tasks with `feature:<slug>` for filtering. Creates task breakdown in `specs/<slug>/03-tasks.md` with re-decompose metadata.
 
 **Usage:** `/spec:decompose specs/add-user-auth/02-specification.md`
 
+**Incremental Mode:** Automatically detects when spec changelog has been updated after feedback and creates only new tasks for changes.
+
 #### /spec:execute
-Enhanced version that creates/updates implementation summaries with session history in `specs/<slug>/04-implementation.md`. Supports resuming implementation across multiple sessions.
+Enhanced version with **session resume capability** that continues from previous progress. Reads implementation summary to skip completed tasks, resume in-progress work, and append new session history. Creates/updates `specs/<slug>/04-implementation.md` with cross-session context.
 
 **Usage:** `/spec:execute specs/add-user-auth/02-specification.md`
+
+**Resume Mode:** Automatically detects previous sessions and skips completed work, maintaining full implementation history.
 
 **Track Progress:** `stm list --pretty --tag feature:add-user-auth` (replaces removed `/spec:progress`)
 
@@ -362,6 +386,41 @@ This repository implements a complete end-to-end workflow for feature developmen
               Not Finished          Finished
                    │                     │
                    └──────────┬──────────┘
+                              │
+                              ▼
+                    Manual Testing
+                              │
+                   Discover issues or
+                   improvement opportunities
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     FEEDBACK PHASE                              │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+           /spec:feedback <spec-file>
+           (Custom Command - one item at a time)
+                              │
+            Process feedback item:
+            • Code exploration
+            • Optional research
+            • Interactive decisions
+                              │
+                   ┌──────────┴──────────┬────────────┐
+                   │                     │            │
+              Implement Now           Defer     Out of Scope
+                   │                     │            │
+        Update spec changelog    Create STM task     Log only
+                   │                     │            │
+                   ▼                     │            │
+       /spec:decompose (incremental)    │            │
+                   │                     │            │
+       /spec:execute (resume)           │            │
+                   │                     │            │
+                   └──────────┬──────────┴────────────┘
+                              │
+                   More feedback items? (repeat)
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
@@ -696,7 +755,8 @@ cat .claude/settings.json | jq .
 ### This Repository
 - [Installation Guide](docs/INSTALLATION_GUIDE.md) - When to use user vs project installation
 - [Setup Guide](docs/SETUP_GUIDE.md) - Detailed setup instructions
-- [Detailed Research](research.md) - Comprehensive analysis and validation
+- [Design Rationale](docs/DESIGN_RATIONALE.md) - Design validation and best practices
+- [Feedback Workflow Guide](docs/guides/feedback-workflow-guide.md) - Complete guide to post-implementation feedback
 - [GitHub Issues](https://github.com/kennethpriester/claude-config/issues) - Report problems
 
 ### Community Resources

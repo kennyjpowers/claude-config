@@ -27,15 +27,25 @@ Transform an ideation document into a validated, implementation-ready specificat
 
 **Usage**: `/ideate-to-spec docs/ideation/add-proxy-config-to-figma-plugin.md`
 
-### /spec:progress
-Track implementation progress for a specification. Bridges the gap between `/spec:decompose` and `/spec:execute` by generating progress reports and updating task breakdowns.
+### /spec:feedback
+Process ONE piece of post-implementation feedback with structured workflow. Includes code exploration, optional research, interactive decisions (implement/defer/out-of-scope), spec updates, and feedback logging.
 
-**Usage**: `/spec:progress specs/add-user-auth-jwt.md`
+**Usage**: `/spec:feedback specs/add-user-auth/02-specification.md`
 
 ### /spec:doc-update
 Review all documentation to identify what needs to be updated based on a new specification file. Launches parallel documentation expert agents.
 
 **Usage**: `/spec:doc-update specs/text-generator-spec.md`
+
+## Enhanced Spec Commands (Overrides)
+
+These commands override ClaudeKit versions with enhanced features:
+
+### /spec:decompose
+Enhanced with incremental mode that preserves completed work and creates only new tasks when spec changelog is updated.
+
+### /spec:execute
+Enhanced with resume capability that continues from previous sessions, skipping completed work and maintaining implementation history.
 
 ## Installation
 
