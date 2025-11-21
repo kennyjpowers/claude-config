@@ -51,7 +51,11 @@ IDEATION → SPECIFICATION → DECOMPOSITION → IMPLEMENTATION → FEEDBACK →
 - **Command:** `/spec:feedback <path-to-spec>`
 - **Output:** `specs/<slug>/05-feedback.md`
 - **Purpose:** Process post-implementation feedback with structured decisions
-- **Process:** One feedback item at a time → explore code → optional research → interactive decisions → update spec or defer
+- **Process:** One feedback item at a time → explore code → optional research → interactive decisions → take action based on outcome
+- **Decision Outcomes:**
+  - **Implement Now:** Update spec changelog → incremental `/spec:decompose` → resume `/spec:execute`
+  - **Defer:** Create STM task for future consideration → log in feedback file
+  - **Out of Scope:** Log decision with rationale → no further action
 - **Integration:** Works with incremental `/spec:decompose` and resume `/spec:execute`
 
 ### Phase 6: Completion
@@ -135,7 +139,7 @@ stm add "Task" --tags "feature:my-feature,phase1,high-priority"
 5. User settings (`~/.claude/settings.json` - global)
 
 ### Specification Requirements
-Valid specs must include 17 sections:
+Valid specs must include 18 sections:
 - Title, status, overview, problem, goals, non-goals
 - Dependencies, design, UX, testing, performance, security
 - Documentation, phases, open questions, references

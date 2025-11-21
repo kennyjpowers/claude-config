@@ -30,318 +30,277 @@ Process ONE specific piece of feedback from testing/usage with structured workfl
 
 Extract the feature slug, validate prerequisites, check STM availability, and warn about incomplete tasks.
 
-```markdown
-1. Extract feature slug from spec path
+## Instructions for Claude
 
-   The spec path provided as argument must match one of these patterns:
-   - Feature directory: `specs/<slug>/02-specification.md` → slug is `<slug>`
-   - Legacy feature: `specs/feat-<slug>.md` → slug is `feat-<slug>`
-   - Legacy bugfix: `specs/fix-<issue>-<desc>.md` → slug is `fix-<issue>-<desc>`
+Follow these steps to validate prerequisites before collecting feedback:
 
-   Use Bash tool to extract:
-   ```bash
-   SPEC_PATH="<path-to-spec-file argument>"
+**1. Extract Feature Slug**
 
-   # Feature-directory format (preferred)
-   if [[ "$SPEC_PATH" =~ ^specs/([^/]+)/02-specification\.md$ ]]; then
-     SLUG="${BASH_REMATCH[1]}"
-   # Legacy formats
-   elif [[ "$SPEC_PATH" =~ ^specs/(feat|fix)-(.+)\.md$ ]]; then
-     SLUG="${BASH_REMATCH[1]}-${BASH_REMATCH[2]}"
-   else
-     echo "❌ Error: Invalid spec path format"
-     echo ""
-     echo "Expected formats:"
-     echo "  - specs/<slug>/02-specification.md (feature directory)"
-     echo "  - specs/feat-<name>.md (legacy)"
-     echo "  - specs/fix-<issue>-<desc>.md (legacy)"
-     exit 1
-   fi
+Extract the slug from the spec path provided as argument. The slug will be used for:
+- Feedback log path: `specs/<slug>/05-feedback.md`
+- STM task tags: `feature:<slug>`
+- Implementation summary: `specs/<slug>/04-implementation.md`
 
-   echo "✓ Feature slug: $SLUG"
-   ```
+Path formats to support:
+- Feature directory: `specs/<slug>/02-specification.md` → slug is `<slug>`
+- Legacy feature: `specs/feat-<name>.md` → slug is `feat-<name>`
+- Legacy bugfix: `specs/fix-<issue>-<desc>.md` → slug is `fix-<issue>-<desc>`
 
-2. Validate prerequisites - Check that implementation summary exists
+Use simple string manipulation (cut, basename/dirname) to extract the slug. Validate the slug contains only lowercase letters, numbers, and hyphens.
 
-   ```bash
-   IMPL_FILE="specs/$SLUG/04-implementation.md"
+Example implementation:
+```bash
+# Get spec path from argument
+SPEC_PATH="$ARGUMENTS"
 
-   if [ ! -f "$IMPL_FILE" ]; then
-     echo "❌ Error: No implementation found"
-     echo ""
-     echo "You must complete implementation before providing feedback."
-     echo "Run: /spec:execute specs/$SLUG/02-specification.md"
-     exit 1
-   fi
+# Extract slug based on path format
+if [[ "$SPEC_PATH" == specs/*/02-specification.md ]]; then
+  # Feature-directory format: extract middle directory
+  SLUG=$(echo "$SPEC_PATH" | cut -d'/' -f2)
+else
+  # Legacy format: extract filename without extension
+  SLUG=$(basename "$SPEC_PATH" .md)
+fi
 
-   echo "✅ Implementation summary found"
-   ```
+# Validate slug format
+if [[ ! "$SLUG" =~ ^[a-z0-9-]+$ ]]; then
+  echo "❌ Error: Invalid slug format: $SLUG"
+  echo "   Slug must be lowercase alphanumeric with hyphens"
+  exit 1
+fi
 
-3. Check STM availability (graceful degradation)
-
-   ```bash
-   STM_STATUS=$(claudekit status stm)
-   STM_AVAILABLE=false
-
-   if [[ "$STM_STATUS" == *"Available and initialized"* ]]; then
-     STM_AVAILABLE=true
-     echo "✅ STM available for task tracking"
-   elif [[ "$STM_STATUS" == *"Available but not initialized"* ]]; then
-     echo "⚠️  Warning: STM not initialized"
-     echo "Run: stm init"
-     echo "Continuing without STM task tracking..."
-   else
-     echo "⚠️  Warning: STM not installed"
-     echo "Deferred feedback will be logged but not tracked in STM"
-     echo "Install: npm install -g simple-task-master"
-   fi
-   ```
-
-4. Check for incomplete tasks (if STM available)
-
-   ```bash
-   if [ "$STM_AVAILABLE" = true ]; then
-     # Query STM for in-progress tasks
-     INCOMPLETE_TASKS=$(stm list --tags "feature:$SLUG" --status in-progress -f json 2>/dev/null)
-     INCOMPLETE_COUNT=$(echo "$INCOMPLETE_TASKS" | jq 'length' 2>/dev/null || echo "0")
-
-     if [ "$INCOMPLETE_COUNT" -gt 0 ]; then
-       echo ""
-       echo "⚠️  Warning: You have $INCOMPLETE_COUNT task(s) still in progress"
-       echo "Feedback changes may affect them."
-       echo ""
-
-       # Show the incomplete tasks
-       echo "In-progress tasks:"
-       echo "$INCOMPLETE_TASKS" | jq -r '.[] | "  - [\(.id)] \(.title)"' 2>/dev/null
-       echo ""
-
-       # Ask user to continue
-       echo "Continue with feedback anyway? This may impact in-progress work."
-       # Note: In practice, the user will see this and can decide to stop or continue
-       # For now, we'll proceed but with the warning logged
-     fi
-   fi
-
-   echo ""
-   echo "═══════════════════════════════════════════════════"
-   echo "Ready to process feedback for: $SLUG"
-   echo "═══════════════════════════════════════════════════"
-   echo ""
-   ```
-
-Store `$SLUG` and `$STM_AVAILABLE` for use in subsequent steps.
+echo "✓ Feature slug: $SLUG"
 ```
+
+**2. Validate Prerequisites**
+
+Check that the implementation summary exists. This file is created by `/spec:execute` and must be present before processing feedback.
+
+Path to check: `specs/<slug>/04-implementation.md`
+
+If the file doesn't exist:
+- Display error: "❌ Error: No implementation found"
+- Instruct user to run: `/spec:execute specs/<slug>/02-specification.md`
+- Exit with error
+
+If the file exists:
+- Display: "✅ Implementation summary found"
+- Continue to next step
+
+**3. Check STM Availability**
+
+Check if Simple Task Master is available for tracking deferred feedback. Use the claudekit command directly:
+
+```bash
+!claudekit status stm
+```
+
+Based on the output, inform the user:
+- **"Available and initialized"** → STM is ready for tracking deferred tasks
+- **"Available but not initialized"** → Warn user to run `stm init`, proceed without STM
+- **"Not installed"** → Warn user to install STM, proceed without tracking
+
+Display appropriate messages:
+- If available: "✅ STM available for task tracking"
+- If not available: "⚠️ Warning: STM not installed" + installation instructions
+- If not initialized: "⚠️ Warning: STM not initialized" + init command
+
+Remember the STM availability status for Step 6 (when creating deferred tasks).
+
+**4. Check for Incomplete Tasks**
+
+If STM is available and initialized, check for in-progress tasks for this feature.
+
+Query STM:
+```bash
+stm list --tags "feature:<slug>" --status in-progress
+```
+
+If any incomplete tasks are found:
+- Count the tasks
+- Display warning: "⚠️ Warning: You have X task(s) still in progress"
+- Note: "Feedback changes may affect them"
+- List the task IDs and titles
+- Inform user they can proceed but should be aware of potential conflicts
+
+Allow the workflow to continue even with incomplete tasks (this is a warning, not a blocker).
+
+**5. Display Readiness**
+
+Display a separator and confirmation that validation is complete:
+```
+═══════════════════════════════════════════════════
+Ready to process feedback for: <slug>
+═══════════════════════════════════════════════════
+```
+
+After validation, proceed to Step 2 (Feedback Collection).
 
 ### Step 2: Feedback Collection
 
 Prompt the user to provide ONE specific piece of feedback from their testing or usage.
 
-```markdown
-5. Prompt for feedback item
+**Prompt for Feedback**
 
-   Display clear instructions and examples to guide the user:
+Display clear instructions and examples to guide the user in providing actionable feedback:
 
-   ```
-   ╔═══════════════════════════════════════════════════════════════╗
-   ║           Provide Feedback from Testing/Usage                 ║
-   ╚═══════════════════════════════════════════════════════════════╝
-
-   Please provide ONE specific piece of feedback from your testing:
-
-   Examples of good feedback:
-   • "Authentication fails when password contains special characters"
-   • "Dashboard loading is slow with >100 items"
-   • "Error messages are not user-friendly"
-   • "Cannot delete items after editing them"
-   • "Mobile layout breaks on screens <375px wide"
-
-   Guidelines:
-   - Be specific about what's wrong or what could be improved
-   - Include relevant context (conditions, data, steps to reproduce)
-   - One issue per feedback session (run command multiple times for multiple issues)
-
-   Your feedback:
-   ```
-
-   Capture the user's feedback text. The user should provide their feedback at this point.
-
-6. Validate feedback is not empty
-
-   After receiving feedback, verify it's actionable:
-   ```bash
-   # Assuming FEEDBACK variable contains the user's input
-   if [ -z "$FEEDBACK" ] || [ "$FEEDBACK" = "" ]; then
-     echo "❌ Error: Feedback cannot be empty"
-     echo "Please run the command again and provide specific feedback."
-     exit 1
-   fi
-
-   # Basic validation
-   WORD_COUNT=$(echo "$FEEDBACK" | wc -w)
-   if [ "$WORD_COUNT" -lt 3 ]; then
-     echo "⚠️  Warning: Feedback seems very short ($WORD_COUNT words)"
-     echo "Consider providing more context for better analysis."
-   fi
-
-   echo "✓ Feedback received: ${FEEDBACK:0:100}..."
-   echo ""
-   ```
-
-Store `$FEEDBACK` for use in Steps 3-7 (exploration, decisions, logging).
 ```
+╔═══════════════════════════════════════════════════════════════╗
+║           Provide Feedback from Testing/Usage                 ║
+╚═══════════════════════════════════════════════════════════════╝
+
+Please provide ONE specific piece of feedback from your testing:
+
+Examples of good feedback:
+• "Authentication fails when password contains special characters"
+• "Dashboard loading is slow with >100 items"
+• "Error messages are not user-friendly"
+• "Cannot delete items after editing them"
+• "Mobile layout breaks on screens <375px wide"
+
+Guidelines:
+- Be specific about what's wrong or what could be improved
+- Include relevant context (conditions, data, steps to reproduce)
+- One issue per feedback session (run command multiple times for multiple issues)
+
+Your feedback:
+```
+
+Wait for the user to provide their feedback. The user should type or paste their feedback description at this point.
+
+**Validate Feedback**
+
+After receiving the feedback, perform basic validation:
+- Check that feedback is not empty
+- Warn if feedback seems very short (< 3 words)
+- Display confirmation showing first 100 characters
+
+If validation passes, store the feedback text for use in subsequent steps (exploration, decisions, logging).
 
 ### Step 3: Code Exploration
 
 Use Task agent with Explore subagent to investigate relevant code based on feedback.
 
-```markdown
-7. Read spec to identify affected components
+**Read Spec to Identify Affected Components**
 
-   Use Read tool to extract the Detailed Design section from the spec:
-   ```bash
-   SPEC_FILE="specs/$SLUG/02-specification.md"
-   ```
+Read the specification file at `specs/<slug>/02-specification.md` using the Read tool.
 
-   Read the spec file and extract information about:
-   - Components mentioned in Detailed Design section
-   - File paths and locations
-   - Dependencies and integrations
-   - Current implementation details
+Extract information from the "Detailed Design" section about:
+- Component names and descriptions
+- File paths and directory structure
+- Dependencies and integration points
+- Current implementation approach
 
-   Store component information for exploration context.
+This information will provide context for targeted code exploration.
 
-8. Categorize feedback type
+**Categorize Feedback Type**
 
-   Analyze the feedback to determine exploration focus:
-   ```bash
-   # Categorize feedback type for targeted exploration
-   FEEDBACK_LOWER=$(echo "$FEEDBACK" | tr '[:upper:]' '[:lower:]')
-   FEEDBACK_TYPE="general"
+Analyze the feedback text to determine what type of issue this is and where to focus exploration:
 
-   if [[ "$FEEDBACK_LOWER" =~ (fail|error|crash|broken|doesn.?t work|bug) ]]; then
-     FEEDBACK_TYPE="bug"
-     EXPLORATION_FOCUS="Error handling, edge cases, validation logic, failure paths"
-   elif [[ "$FEEDBACK_LOWER" =~ (slow|performance|lag|timeout|delay) ]]; then
-     FEEDBACK_TYPE="performance"
-     EXPLORATION_FOCUS="Performance bottlenecks, resource usage, optimization opportunities"
-   elif [[ "$FEEDBACK_LOWER" =~ (ux|ui|confusing|unclear|hard to|difficult) ]]; then
-     FEEDBACK_TYPE="ux"
-     EXPLORATION_FOCUS="User interaction flows, UI components, feedback mechanisms"
-   elif [[ "$FEEDBACK_LOWER" =~ (security|auth|permission|access) ]]; then
-     FEEDBACK_TYPE="security"
-     EXPLORATION_FOCUS="Security controls, authentication, authorization, input validation"
-   else
-     FEEDBACK_TYPE="general"
-     EXPLORATION_FOCUS="Overall implementation, integration points, data flow"
-   fi
+- **Bug/Error** (keywords: fail, error, crash, broken, doesn't work, bug)
+  → Focus on: Error handling, edge cases, validation logic, failure paths
 
-   echo "Feedback categorized as: $FEEDBACK_TYPE"
-   echo "Exploration focus: $EXPLORATION_FOCUS"
-   echo ""
-   ```
+- **Performance** (keywords: slow, performance, lag, timeout, delay)
+  → Focus on: Performance bottlenecks, resource usage, optimization opportunities
 
-9. Launch Explore agent with targeted investigation
+- **UX/UI** (keywords: ux, ui, confusing, unclear, hard to, difficult)
+  → Focus on: User interaction flows, UI components, feedback mechanisms
 
-   Use Task tool to launch Explore subagent with context:
-   ```
-   Launch Explore agent with this investigation request:
+- **Security** (keywords: security, auth, permission, access)
+  → Focus on: Security controls, authentication, authorization, input validation
 
-   Context:
-   - Feature: $SLUG
-   - Feedback Type: $FEEDBACK_TYPE
-   - Feedback Description: $FEEDBACK
+- **General** (other keywords)
+  → Focus on: Overall implementation, integration points, data flow
 
-   Affected Components (from spec):
-   [List components extracted from Detailed Design section]
+Display the categorization and focus area to help frame the exploration.
 
-   Investigation Focus:
-   $EXPLORATION_FOCUS
+**Launch Explore Agent**
 
-   Please conduct a QUICK but THOROUGH exploration to identify:
-   1. Where in the code changes would be needed to address this feedback
-   2. The blast radius (what other code might be affected)
-   3. Related code that should be reviewed
-   4. Any immediate concerns or risks
+Use the Task tool with `subagent_type: Explore` to investigate the codebase:
 
-   Time limit: Aim for 3-5 minutes of exploration. Focus on actionable findings.
-   ```
-
-   The Explore agent will investigate the codebase and return findings.
-
-10. Store exploration findings
-
-    Capture the key findings from exploration:
-    ```bash
-    # Store exploration results (these will be gathered from agent output)
-    EXPLORATION_FINDINGS=$(cat <<'EXPLORE_EOF'
-    [Findings will include:]
-    - Files/components requiring changes
-    - Blast radius assessment
-    - Related code to review
-    - Immediate concerns or risks
-    EXPLORE_EOF
-    )
-
-    echo "✓ Code exploration complete"
-    echo ""
-    ```
-
-Store `$EXPLORATION_FINDINGS` for use in Steps 5 and 7.
 ```
+Task tool:
+- description: "Explore code for feedback issue"
+- subagent_type: Explore
+- model: haiku  (for faster exploration)
+- prompt: |
+    # Feedback Exploration Request
+
+    **Feature:** <slug>
+    **Feedback:** <user's feedback text>
+    **Type:** <categorized type>
+
+    **Affected Components (from spec):**
+    <list components from Detailed Design section>
+
+    **Investigation Focus:**
+    <exploration focus based on feedback type>
+
+    Please conduct a QUICK but THOROUGH exploration to identify:
+    1. Where in the code changes would be needed to address this feedback
+    2. The blast radius (what other code might be affected)
+    3. Related code that should be reviewed
+    4. Any immediate concerns or risks
+
+    Time limit: Aim for 3-5 minutes of exploration. Focus on actionable findings.
+```
+
+The Explore agent will investigate and return findings about the codebase areas related to the feedback.
+
+**Capture Exploration Findings**
+
+After the Explore agent completes, summarize the key findings:
+- Files/components requiring changes
+- Blast radius assessment (scope of impact)
+- Related code to review
+- Immediate concerns or risks
+
+Display: "✓ Code exploration complete"
+
+Store these findings for use in decision making (Step 5) and feedback logging (Step 7).
 
 ### Step 4: Optional Research
 
 Ask the user if they want research-expert consultation, and invoke if requested.
 
-```markdown
-11. Ask user if research is needed
+**Ask User About Research**
 
-    Use AskUserQuestion tool to offer research:
-    ```
-    Use AskUserQuestion with:
+Use the AskUserQuestion tool to offer optional research consultation:
 
-    Question: "Would you like the research-expert to investigate potential approaches and best practices for addressing this feedback?"
+```
+AskUserQuestion:
+- Question: "Would you like the research-expert to investigate potential approaches and best practices for addressing this feedback?"
+- Header: "Research"
+- multiSelect: false
+- Options:
+  1. Label: "Yes - Investigate approaches"
+     Description: "Launch research-expert to analyze industry best practices, compare implementation approaches, and provide recommendations with trade-offs"
 
-    Header: "Research"
+  2. Label: "No - Continue with findings"
+     Description: "Skip research and proceed with the exploration findings already gathered"
+```
 
-    Options:
-    1. Label: "Yes - Investigate approaches"
-       Description: "Launch research-expert to analyze industry best practices, compare implementation approaches, and provide recommendations with trade-offs"
+**Launch Research-Expert (If Requested)**
 
-    2. Label: "No - Continue with findings"
-       Description: "Skip research and proceed with the exploration findings already gathered"
+If the user selected "Yes - Investigate approaches", launch the research-expert agent:
 
-    multiSelect: false
-    ```
+```
+Task tool:
+- description: "Research feedback solutions"
+- subagent_type: research-expert
+- model: haiku  (for faster research)
+- prompt: |
+    # Research Request: Feedback Solution Approaches
 
-    Store the user's answer.
+    **Context:**
+    - Feature: <slug>
+    - Feedback Type: <categorized type>
+    - Issue: <user's feedback text>
 
-12. Launch research-expert if requested
+    **Exploration Findings:**
+    <summary of code exploration findings>
 
-    If user selected "Yes - Investigate approaches":
-    ```bash
-    # Conditionally launch research-expert
-    if [[ "$RESEARCH_DECISION" == "Yes - Investigate approaches" ]]; then
-      echo "Launching research-expert for investigation..."
-      echo ""
-    ```
-
-    Use Task tool to launch research-expert agent:
-    ```
-    Launch research-expert agent with this research request:
-
-    Research Topic: Approaches for addressing post-implementation feedback
-
-    Context:
-    - Feature: $SLUG
-    - Feedback Type: $FEEDBACK_TYPE
-    - Issue Description: $FEEDBACK
-
-    Exploration Findings:
-    $EXPLORATION_FINDINGS
-
-    Research Objectives:
+    **Research Objectives:**
     1. Industry best practices for this type of issue
     2. Recommended approach with clear rationale
     3. Alternative approaches with trade-offs
@@ -350,455 +309,312 @@ Ask the user if they want research-expert consultation, and invoke if requested.
 
     Please provide concise, actionable recommendations focused on helping make an informed implementation decision.
 
-    Time limit: Aim for 5-7 minutes of research. Focus on practical recommendations.
-    ```
-
-    The research-expert agent will investigate and return recommendations.
-
-13. Store research findings
-
-    Capture the research results:
-    ```bash
-      # Store research results (gathered from agent output)
-      RESEARCH_FINDINGS=$(cat <<'RESEARCH_EOF'
-      [Research findings will include:]
-      - Industry best practices
-      - Recommended approach with rationale
-      - Alternative approaches with trade-offs
-      - Security/performance considerations
-      - Common pitfalls to avoid
-      RESEARCH_EOF
-      )
-
-      echo "✓ Research investigation complete"
-      echo ""
-    else
-      RESEARCH_FINDINGS="[Research skipped by user]"
-      echo "✓ Continuing without research"
-      echo ""
-    fi
-    ```
-
-Store `$RESEARCH_FINDINGS` for use in Steps 5 and 7.
+    Time limit: 5-7 minutes. Focus on practical recommendations.
 ```
+
+**Capture Research Findings**
+
+After research-expert completes (or if skipped), capture the results:
+- If research was performed: Summarize industry best practices, recommended approaches, trade-offs, and considerations
+- If research was skipped: Note "[Research skipped by user]"
+
+Display: "✓ Research investigation complete" (or "✓ Continuing without research")
+
+Store these findings for use in decision making (Step 5) and feedback logging (Step 7).
 
 ### Step 5: Interactive Decisions
 
 Present findings and gather user decisions with batched questions.
 
-```markdown
-14. Display findings summary
+**Display Findings Summary**
 
-    Present the exploration and research findings to the user:
-    ```
-    ═══════════════════════════════════════════════════════════
-                      FINDINGS SUMMARY
-    ═══════════════════════════════════════════════════════════
+Present the exploration and research findings to the user in a clear format:
 
-    Feedback: $FEEDBACK
-
-    Type: $FEEDBACK_TYPE
-
-    --- CODE EXPLORATION FINDINGS ---
-    $EXPLORATION_FINDINGS
-
-    --- RESEARCH FINDINGS ---
-    $RESEARCH_FINDINGS
-
-    ═══════════════════════════════════════════════════════════
-    Now let's decide how to proceed...
-    ```
-
-15. Gather decisions with batched questions
-
-    Use AskUserQuestion tool with 4 batched questions:
-    ```
-    Use AskUserQuestion with these 4 questions:
-
-    Question 1:
-    - question: "How would you like to address this feedback?"
-    - header: "Action"
-    - multiSelect: false
-    - options:
-      1. label: "Implement now"
-         description: "Address this feedback immediately by updating the spec and re-running implementation"
-      2. label: "Defer"
-         description: "Log this feedback and create an STM task to address it later"
-      3. label: "Out of scope"
-         description: "Log this feedback but take no action (not aligned with current goals)"
-
-    Question 2:
-    - question: "What implementation scope should be used?"
-    - header: "Scope"
-    - multiSelect: false
-    - options:
-      1. label: "Minimal"
-         description: "Address only the specific issue reported, smallest possible change"
-      2. label: "Comprehensive"
-         description: "Address the issue plus related improvements identified in findings"
-      3. label: "Phased"
-         description: "Split into multiple phases: quick fix now, comprehensive improvements later"
-
-    Question 3:
-    - question: "Which implementation approach should be used?"
-    - header: "Approach"
-    - multiSelect: false
-    - options:
-      [Dynamic options based on research findings and exploration]
-      - If research was performed: List recommended approach + alternatives from research
-      - If research was skipped: List approach options from exploration findings
-      Example options:
-      1. label: "Recommended: [Approach Name]"
-         description: "[Brief description from research/exploration]"
-      2. label: "Alternative: [Approach Name]"
-         description: "[Brief description with key trade-off]"
-      3. label: "Custom approach"
-         description: "Describe a different approach not listed above"
-
-    Question 4:
-    - question: "What is the priority level for addressing this feedback?"
-    - header: "Priority"
-    - multiSelect: false
-    - options:
-      1. label: "Critical"
-         description: "Blocks core functionality or has security implications - must fix immediately"
-      2. label: "High"
-         description: "Significant impact on user experience or system reliability"
-      3. label: "Medium"
-         description: "Noticeable issue but workarounds exist"
-      4. label: "Low"
-         description: "Minor inconvenience or nice-to-have improvement"
-    ```
-
-16. Store and validate decisions
-
-    Process the answers from AskUserQuestion:
-    ```bash
-    # Store all decisions in associative array
-    declare -A DECISIONS
-    DECISIONS[action]="[Answer to Question 1]"
-    DECISIONS[scope]="[Answer to Question 2]"
-    DECISIONS[approach]="[Answer to Question 3]"
-    DECISIONS[priority]="[Answer to Question 4]"
-
-    # Validate decisions are consistent
-    # Note: Questions 2-3 should only be answered if Question 1 = "Implement now"
-    # Question 4 should be answered for both "Implement now" and "Defer"
-
-    echo "✓ Decisions captured"
-    echo "  Action: ${DECISIONS[action]}"
-    echo "  Scope: ${DECISIONS[scope]}"
-    echo "  Approach: ${DECISIONS[approach]}"
-    echo "  Priority: ${DECISIONS[priority]}"
-    echo ""
-    ```
-
-Store `$DECISIONS` associative array for use in Steps 6 and 7.
-
-Note: Questions 2-3 are conditional - they should be presented/answered only when Question 1 = "Implement now". Question 4 should be presented when Question 1 is "Implement now" OR "Defer".
 ```
+═══════════════════════════════════════════════════════════
+                  FINDINGS SUMMARY
+═══════════════════════════════════════════════════════════
+
+Feedback: <user's feedback text>
+
+Type: <categorized type>
+
+--- CODE EXPLORATION FINDINGS ---
+<summary of exploration findings>
+
+--- RESEARCH FINDINGS ---
+<research findings or "[Research skipped by user]">
+
+═══════════════════════════════════════════════════════════
+Now let's decide how to proceed...
+```
+
+**Gather Decisions with Batched Questions**
+
+Use AskUserQuestion tool to collect all decisions at once. The questions should be asked based on the user's primary action choice:
+
+**Question 1 (Always ask):**
+```
+- question: "How would you like to address this feedback?"
+- header: "Action"
+- multiSelect: false
+- options:
+  1. label: "Implement now"
+     description: "Address this feedback immediately by updating the spec and re-running implementation"
+  2. label: "Defer"
+     description: "Log this feedback and create an STM task to address it later"
+  3. label: "Out of scope"
+     description: "Log this feedback but take no action (not aligned with current goals)"
+```
+
+**Question 2 (If "Implement now" selected):**
+```
+- question: "What implementation scope should be used?"
+- header: "Scope"
+- multiSelect: false
+- options:
+  1. label: "Minimal"
+     description: "Address only the specific issue reported, smallest possible change"
+  2. label: "Comprehensive"
+     description: "Address the issue plus related improvements identified in findings"
+  3. label: "Phased"
+     description: "Split into multiple phases: quick fix now, comprehensive improvements later"
+```
+
+**Question 3 (If "Implement now" selected and research/exploration provided approaches):**
+```
+- question: "Which implementation approach should be used?"
+- header: "Approach"
+- multiSelect: false
+- options:
+  [Build options dynamically from findings]
+  - List recommended approach from research/exploration
+  - List alternative approaches with trade-offs
+  - Include "Custom approach" option
+```
+
+**Question 4 (If "Implement now" or "Defer" selected):**
+```
+- question: "What is the priority level for addressing this feedback?"
+- header: "Priority"
+- multiSelect: false
+- options:
+  1. label: "Critical"
+     description: "Blocks core functionality or has security implications - must fix immediately"
+  2. label: "High"
+     description: "Significant impact on user experience or system reliability"
+  3. label: "Medium"
+     description: "Noticeable issue but workarounds exist"
+  4. label: "Low"
+     description: "Minor inconvenience or nice-to-have improvement"
+```
+
+**Capture Decisions**
+
+After collecting answers from AskUserQuestion, store the decisions:
+- Action (implement/defer/out-of-scope)
+- Scope (if implementing: minimal/comprehensive/phased)
+- Approach (if implementing: selected approach)
+- Priority (if implementing or deferring: critical/high/medium/low)
+
+Display confirmation:
+```
+✓ Decisions captured
+  Action: <selected action>
+  Scope: <selected scope>
+  Approach: <selected approach>
+  Priority: <selected priority>
+```
+
+Store these decisions for use in Step 6 (action execution) and Step 7 (feedback logging).
 
 ### Step 6: Execute Actions
 
 Execute the appropriate actions based on the user's decision.
 
+Based on the action decision from Step 5, perform the appropriate action:
+
+**Branch Logic:**
+- If "Implement now" → Update spec changelog (see below)
+- If "Defer" → Create STM task (see below)
+- If "Out of scope" → Skip to Step 7 (only log feedback, no other action)
+
+Display: "Processing action: <selected action>"
+
+**If Action = "Implement now": Update Spec Changelog**
+
+Add a changelog entry to the specification documenting the feedback and planned changes.
+
+1. Check if the spec has a "## 18. Changelog" or "## Changelog" section
+   - If missing: Create the section using Write/Edit tools
+   - Display: "✓ Created Changelog section in spec"
+
+2. Use Edit tool to append the changelog entry at the end of the Changelog section:
+
 ```markdown
-17. Branch based on action decision
+### <current-date> - Post-Implementation Feedback
 
-    Route to the appropriate action handler:
-    ```bash
-    ACTION="${DECISIONS[action]}"
+**Source:** Feedback #<N> (see specs/<slug>/05-feedback.md)
 
-    echo "Processing action: $ACTION"
-    echo ""
+**Issue:** <user's feedback text>
 
-    case "$ACTION" in
-      "Implement now")
-        # Proceed to spec changelog update (step 17a)
-        ;;
-      "Defer")
-        # Proceed to deferred task creation (step 17b)
-        ;;
-      "Out of scope")
-        # Only log, no further action needed
-        echo "✓ Feedback will be logged as out of scope"
-        echo "No spec or task changes required"
-        echo ""
-        ;;
-      *)
-        echo "❌ Error: Unknown action '$ACTION'"
-        exit 1
-        ;;
-    esac
-    ```
+**Decision:** Implement with <scope> scope
 
-17a. Update spec changelog (if "Implement now")
+**Changes to Specification:**
+[Based on exploration findings, list specific sections needing updates]
+- Section X: <description of change needed>
+- Section Y: <description of change needed>
 
-    Add changelog entry to the specification:
-    ```bash
-    if [ "$ACTION" = "Implement now" ]; then
-      echo "Updating specification changelog..."
+**Implementation Impact:**
+- Priority: <selected priority>
+- Approach: <selected approach>
+- Affected components: <list from exploration>
+- Estimated blast radius: <from exploration>
 
-      SPEC_FILE="specs/$SLUG/02-specification.md"
-      CHANGELOG_DATE=$(date +"%Y-%m-%d")
-
-      # Check if spec has a Changelog section
-      if ! grep -q "^## 18\. Changelog" "$SPEC_FILE" && ! grep -q "^## Changelog" "$SPEC_FILE"; then
-        # Create Changelog section
-        echo "" >> "$SPEC_FILE"
-        echo "## 18. Changelog" >> "$SPEC_FILE"
-        echo "" >> "$SPEC_FILE"
-        echo "Track specification updates and their rationale." >> "$SPEC_FILE"
-        echo "" >> "$SPEC_FILE"
-        echo "✓ Created Changelog section in spec"
-      fi
-    ```
-
-    Use Edit tool to append the changelog entry:
-    ```
-    Append to the Changelog section:
-
-    ### $CHANGELOG_DATE - Post-Implementation Feedback
-
-    **Source:** Feedback #[N] (see specs/$SLUG/05-feedback.md)
-
-    **Issue:** $FEEDBACK
-
-    **Decision:** ${DECISIONS[action]} with ${DECISIONS[scope]} scope
-
-    **Changes to Specification:**
-    [Based on exploration findings, list the specific sections that need updates]
-    - Section X: [Description of change needed]
-    - Section Y: [Description of change needed]
-
-    **Implementation Impact:**
-    - Priority: ${DECISIONS[priority]}
-    - Approach: ${DECISIONS[approach]}
-    - Affected components: [List from exploration findings]
-    - Estimated blast radius: [From exploration findings]
-
-    **Next Steps:**
-    1. Review and update the affected specification sections above
-    2. Run `/spec:decompose specs/$SLUG/02-specification.md` to update task breakdown
-    3. Run `/spec:execute specs/$SLUG/02-specification.md` to implement changes
-    ```
-
-    Complete the update:
-    ```bash
-      echo "✅ Spec changelog updated"
-      echo ""
-      echo "Next steps:"
-      echo "  1. Review and update the affected spec sections listed in the changelog"
-      echo "  2. Run: /spec:decompose specs/$SLUG/02-specification.md"
-      echo "  3. Run: /spec:execute specs/$SLUG/02-specification.md"
-      echo ""
-    fi
-    ```
-
-17b. Create deferred task (if "Defer" and STM available)
-
-    Create an STM task for deferred feedback:
-    ```bash
-    if [ "$ACTION" = "Defer" ]; then
-      if [ "$STM_AVAILABLE" = true ]; then
-        echo "Creating deferred task in STM..."
-
-        # Create task title from feedback (first 80 chars)
-        TASK_TITLE=$(echo "$FEEDBACK" | head -c 80)
-        if [ ${#FEEDBACK} -gt 80 ]; then
-          TASK_TITLE="${TASK_TITLE}..."
-        fi
-
-        # Priority mapping
-        PRIORITY_LOWER=$(echo "${DECISIONS[priority]}" | tr '[:upper:]' '[:lower:]')
-
-        # Build full task details
-        TASK_DETAILS=$(cat <<TASK_EOF
-    **Feedback:** $FEEDBACK
-
-    **Type:** $FEEDBACK_TYPE
-
-    **Exploration Findings:**
-    $EXPLORATION_FINDINGS
-
-    **Research Insights:**
-    $RESEARCH_FINDINGS
-
-    **Recommended Approach:** ${DECISIONS[approach]}
-
-    **Implementation Scope:** ${DECISIONS[scope]}
-
-    **When Implementing:**
-    1. Update spec changelog and affected sections
-    2. Run /spec:decompose to update tasks
-    3. Run /spec:execute to implement changes
-
-    **Reference:** See specs/$SLUG/05-feedback.md for full context
-    TASK_EOF
-    )
-
-        # Create the STM task
-        TASK_ID=$(stm add "$TASK_TITLE" \
-          --details "$TASK_DETAILS" \
-          --tags "feature:$SLUG,feedback,deferred,$PRIORITY_LOWER" \
-          --status pending \
-          --format json | jq -r '.id')
-
-        if [ -n "$TASK_ID" ] && [ "$TASK_ID" != "null" ]; then
-          echo "✅ Deferred task created: #$TASK_ID"
-          echo ""
-          echo "Task details:"
-          echo "  Title: $TASK_TITLE"
-          echo "  Tags: feature:$SLUG, feedback, deferred, $PRIORITY_LOWER"
-          echo "  Priority: ${DECISIONS[priority]}"
-          echo ""
-          echo "View task: stm show $TASK_ID"
-          echo "List deferred feedback: stm list --tags feature:$SLUG,feedback,deferred"
-          echo ""
-
-          # Store task ID for feedback log
-          DEFERRED_TASK_ID=$TASK_ID
-        else
-          echo "❌ Error: Failed to create STM task"
-          DEFERRED_TASK_ID=""
-        fi
-      else
-        echo "⚠️  STM not available - task cannot be created"
-        echo "Feedback will be logged in 05-feedback.md only"
-        echo ""
-        DEFERRED_TASK_ID=""
-      fi
-    fi
-    ```
-
-Store `$DEFERRED_TASK_ID` for use in Step 7.
+**Next Steps:**
+1. Review and update the affected specification sections above
+2. Run `/spec:decompose specs/<slug>/02-specification.md` to update task breakdown
+3. Run `/spec:execute specs/<slug>/02-specification.md` to implement changes
 ```
+
+Display completion message:
+```
+✅ Spec changelog updated
+
+Next steps:
+  1. Review and update the affected spec sections listed in the changelog
+  2. Run: /spec:decompose specs/<slug>/02-specification.md
+  3. Run: /spec:execute specs/<slug>/02-specification.md
+```
+
+**If Action = "Defer": Create STM Task**
+
+Create an STM task to track deferred feedback for later implementation.
+
+1. Check if STM is available (from Step 1 validation)
+   - If not available: Display warning, skip task creation, proceed to Step 7
+
+2. If STM is available, create a task with the following:
+   - **Title:** First 80 characters of feedback (truncate with "..." if longer)
+   - **Details:** Full feedback description including:
+     - Feedback text
+     - Type (bug/performance/ux/security/general)
+     - Exploration findings summary
+     - Research insights (if any)
+     - Recommended approach
+     - Implementation scope
+     - Reference to `specs/<slug>/05-feedback.md`
+   - **Tags:** `feature:<slug>`, `feedback`, `deferred`, `<priority-lowercase>`
+   - **Status:** pending
+
+Use STM command:
+```bash
+stm add "<title>" \
+  --details "<full-details>" \
+  --tags "feature:<slug>,feedback,deferred,<priority>" \
+  --status pending
+```
+
+3. After creating the task:
+   - Extract the task ID from the command output
+   - Display confirmation:
+     ```
+     ✅ Deferred task created: #<task-id>
+
+     Task details:
+       Title: <task-title>
+       Tags: feature:<slug>, feedback, deferred, <priority>
+       Priority: <selected-priority>
+
+     View task: stm show <task-id>
+     List deferred feedback: stm list --tags feature:<slug>,feedback,deferred
+     ```
+   - Store the task ID for use in Step 7 (feedback log)
+
+4. If task creation fails:
+   - Display error: "❌ Error: Failed to create STM task"
+   - Continue to Step 7 (feedback will still be logged)
 
 ### Step 7: Update Feedback Log
 
 Create or update the feedback log with a complete entry for this feedback item.
 
+**Determine Next Feedback Number**
+
+1. Check if `specs/<slug>/05-feedback.md` exists
+2. If exists, find the highest existing feedback number (pattern: `## Feedback #N`)
+   - Search for all "## Feedback #" headers
+   - Extract the highest number
+   - Next number = highest + 1
+3. If doesn't exist or no entries found, start with #1
+
+Display: "This will be Feedback #<N>"
+
+**Build Feedback Entry**
+
+Create a complete feedback entry using the Write/Edit tools with this markdown structure:
+
 ```markdown
-18. Determine next feedback number
+## Feedback #<N>
 
-    Calculate the next feedback number:
-    ```bash
-    FEEDBACK_LOG="specs/$SLUG/05-feedback.md"
-    FEEDBACK_NUMBER=1
-
-    if [ -f "$FEEDBACK_LOG" ]; then
-      # Extract existing feedback numbers (format: ## Feedback #N)
-      LAST_NUMBER=$(grep -E "^## Feedback #[0-9]+" "$FEEDBACK_LOG" | \
-                    sed -E 's/^## Feedback #([0-9]+).*/\1/' | \
-                    sort -n | \
-                    tail -1)
-
-      if [ -n "$LAST_NUMBER" ]; then
-        FEEDBACK_NUMBER=$((LAST_NUMBER + 1))
-      fi
-    fi
-
-    echo "This will be Feedback #$FEEDBACK_NUMBER"
-    ```
-
-19. Create or update feedback log file
-
-    Generate the complete log entry:
-    ```bash
-    TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
-
-    # Determine status for display
-    case "$ACTION" in
-      "Implement now")
-        STATUS="Accepted - Implementation in progress"
-        ;;
-      "Defer")
-        STATUS="Deferred - Logged for future consideration"
-        ;;
-      "Out of scope")
-        STATUS="Out of scope - Logged only"
-        ;;
-    esac
-
-    # Build the feedback entry
-    FEEDBACK_ENTRY=$(cat <<FEEDBACK_EOF
-
-## Feedback #$FEEDBACK_NUMBER
-
-**Date:** $TIMESTAMP
-**Status:** $STATUS
-**Type:** $FEEDBACK_TYPE
-**Priority:** ${DECISIONS[priority]}
+**Date:** <current-date-time>
+**Status:** <status-based-on-action>
+**Type:** <feedback-type>
+**Priority:** <selected-priority>
 
 ### Description
 
-$FEEDBACK
+<user's-feedback-text>
 
 ### Code Exploration Findings
 
-$EXPLORATION_FINDINGS
+<summary-of-exploration-findings>
 
 ### Research Findings
 
-$RESEARCH_FINDINGS
+<research-findings-or-"Research skipped by user">
 
 ### Decisions
 
-- **Action:** ${DECISIONS[action]}
-- **Scope:** ${DECISIONS[scope]}
-- **Approach:** ${DECISIONS[approach]}
-- **Priority:** ${DECISIONS[priority]}
+- **Action:** <selected-action>
+- **Scope:** <selected-scope>
+- **Approach:** <selected-approach>
+- **Priority:** <selected-priority>
 
 ### Actions Taken
 
-FEEDBACK_EOF
-    )
-
-    # Add action-specific details
-    if [ "$ACTION" = "Implement now" ]; then
-      FEEDBACK_ENTRY="$FEEDBACK_ENTRY
-- Updated specification changelog (Section 18)
-- Next steps: Update spec sections → /spec:decompose → /spec:execute"
-    elif [ "$ACTION" = "Defer" ] && [ -n "$DEFERRED_TASK_ID" ]; then
-      FEEDBACK_ENTRY="$FEEDBACK_ENTRY
-- Created STM task #$DEFERRED_TASK_ID
-- Tagged with: feature:$SLUG, feedback, deferred, $PRIORITY_LOWER
-- View with: stm show $DEFERRED_TASK_ID"
-    elif [ "$ACTION" = "Defer" ]; then
-      FEEDBACK_ENTRY="$FEEDBACK_ENTRY
-- Logged for future consideration
-- Note: STM not available, task not created"
-    else
-      FEEDBACK_ENTRY="$FEEDBACK_ENTRY
-- Logged as out of scope
-- No further action planned"
-    fi
-
-    # Add rationale
-    FEEDBACK_ENTRY="$FEEDBACK_ENTRY
+<action-specific-details>
 
 ### Rationale
 
 This feedback was addressed through the /spec:feedback workflow:
 1. Code exploration identified affected components and blast radius
-2. ${RESEARCH_FINDINGS:0:50}... research ${RESEARCH_FINDINGS:+was performed}${RESEARCH_FINDINGS:-was skipped}
-3. Interactive decision process resulted in: ${DECISIONS[action]}
-4. ${STATUS}
+2. Research <was-performed-or-skipped>
+3. Interactive decision process resulted in: <action>
+4. <status>
 
 ---
-"
-    ```
+```
 
-20. Write the feedback log
+**Status values based on action:**
+- "Implement now" → "Accepted - Implementation in progress"
+- "Defer" → "Deferred - Logged for future consideration"
+- "Out of scope" → "Out of scope - Logged only"
 
-    Use Write or Edit tool to update the log:
-    ```bash
-    if [ ! -f "$FEEDBACK_LOG" ]; then
-      # Create new feedback log with header
-      HEADER=$(cat <<HEADER_EOF
+**Actions Taken section content:**
+- If "Implement now": "Updated specification changelog (Section 18); Next steps: Update spec sections → /spec:decompose → /spec:execute"
+- If "Defer" (with STM task): "Created STM task #<task-id>; Tagged with: feature:<slug>, feedback, deferred, <priority>; View with: stm show <task-id>"
+- If "Defer" (no STM): "Logged for future consideration; Note: STM not available, task not created"
+- If "Out of scope": "Logged as out of scope; No further action planned"
+
+**Write the Feedback Log**
+
+1. If `specs/<slug>/05-feedback.md` doesn't exist, create it with header:
+
+```markdown
 # Feedback Log
 
-Post-implementation feedback, analysis, and decisions for the $SLUG feature.
+Post-implementation feedback, analysis, and decisions for the <slug> feature.
 
 Each feedback item includes:
 - Description of the issue or improvement
@@ -807,78 +623,58 @@ Each feedback item includes:
 - Actions taken (spec updates, deferred tasks, or out-of-scope logging)
 
 ---
-HEADER_EOF
-      )
-    ```
+```
 
-    Use Write tool to create the file:
-    ```
-    Write to: $FEEDBACK_LOG
-    Content: $HEADER$FEEDBACK_ENTRY
-    ```
+2. Use Write or Edit tool to create/update the feedback log:
+   - If file doesn't exist: Use Write tool to create with header + entry
+   - If file exists: Use Edit tool to append entry to end
 
-    If file exists, use Edit tool to append:
-    ```
-    Append to: $FEEDBACK_LOG
-    Content: $FEEDBACK_ENTRY
-    ```
+3. Display confirmation:
+```
+✅ Feedback log updated: specs/<slug>/05-feedback.md
+```
 
-    Complete the logging:
-    ```bash
-      echo "✅ Feedback log updated: $FEEDBACK_LOG"
-      echo ""
-    else
-      # Append to existing file
-    ```
+**Display Completion Summary**
 
-    Use Edit tool to append the entry, then:
-    ```bash
-      echo "✅ Feedback log updated: $FEEDBACK_LOG"
-      echo ""
-    fi
-    ```
+Show a comprehensive summary of what was completed:
 
-21. Display summary
+```
+═══════════════════════════════════════════════════════════
+              FEEDBACK PROCESSING COMPLETE
+═══════════════════════════════════════════════════════════
 
-    Show comprehensive summary of what was done:
-    ```bash
-    echo "═══════════════════════════════════════════════════════════"
-    echo "              FEEDBACK PROCESSING COMPLETE"
-    echo "═══════════════════════════════════════════════════════════"
-    echo ""
-    echo "Feedback #$FEEDBACK_NUMBER processed successfully"
-    echo ""
-    echo "Decision: ${DECISIONS[action]}"
-    echo "Priority: ${DECISIONS[priority]}"
-    echo ""
-    echo "Files Updated:"
-    echo "  - $FEEDBACK_LOG"
+Feedback #<N> processed successfully
 
-    if [ "$ACTION" = "Implement now" ]; then
-      echo "  - specs/$SLUG/02-specification.md (changelog)"
-      echo ""
-      echo "Next Steps:"
-      echo "  1. Review the changelog entry in the spec"
-      echo "  2. Update the affected specification sections"
-      echo "  3. Run: /spec:decompose specs/$SLUG/02-specification.md"
-      echo "  4. Run: /spec:execute specs/$SLUG/02-specification.md"
-    elif [ "$ACTION" = "Defer" ] && [ -n "$DEFERRED_TASK_ID" ]; then
-      echo ""
-      echo "STM Task Created: #$DEFERRED_TASK_ID"
-      echo ""
-      echo "Query Commands:"
-      echo "  - View task: stm show $DEFERRED_TASK_ID"
-      echo "  - List all deferred feedback: stm list --tags feature:$SLUG,feedback,deferred"
-      echo "  - List by priority: stm list --tags feature:$SLUG,feedback,deferred,$PRIORITY_LOWER"
-    else
-      echo ""
-      echo "No further action required."
-    fi
+Decision: <selected-action>
+Priority: <selected-priority>
 
-    echo ""
-    echo "View feedback log: $FEEDBACK_LOG"
-    echo "═══════════════════════════════════════════════════════════"
-    ```
+Files Updated:
+  - specs/<slug>/05-feedback.md
+  <if-implement-now: - specs/<slug>/02-specification.md (changelog)>
+
+<if-implement-now:
+Next Steps:
+  1. Review the changelog entry in the spec
+  2. Update the affected specification sections
+  3. Run: /spec:decompose specs/<slug>/02-specification.md
+  4. Run: /spec:execute specs/<slug>/02-specification.md
+>
+
+<if-defer-with-task:
+STM Task Created: #<task-id>
+
+Query Commands:
+  - View task: stm show <task-id>
+  - List all deferred feedback: stm list --tags feature:<slug>,feedback,deferred
+  - List by priority: stm list --tags feature:<slug>,feedback,deferred,<priority>
+>
+
+<if-out-of-scope:
+No further action required.
+>
+
+View feedback log: specs/<slug>/05-feedback.md
+═══════════════════════════════════════════════════════════
 ```
 
 ## Example Usage

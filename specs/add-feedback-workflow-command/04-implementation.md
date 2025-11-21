@@ -17,9 +17,9 @@ Implementing a comprehensive feedback workflow system that enables structured po
 ## Progress
 
 **Status:** ✅ COMPLETE
-**Tasks Completed:** 44 / 44
-**Last Session:** 2025-11-21 Session 4
-**Current Phase:** All Phases Complete!
+**Tasks Completed:** 54 / 54
+**Last Session:** 2025-11-21 Session 6
+**Current Phase:** All Phases Complete + Full Bash Refactoring (All 3 Commands)!
 
 ## Tasks Completed
 
@@ -273,6 +273,44 @@ Completed comprehensive documentation and testing infrastructure:
 - Interactive user prompts where appropriate
 - Clear visual feedback and progress tracking
 
+### Session 5 - 2025-11-21
+
+**Bash Refactoring (Tasks 45-49) ✅ COMPLETE**
+
+- ✅ [Task 45 (1.13)] Refactor slug extraction to declarative pattern
+- ✅ [Task 46 (1.14)] Refactor STM status check to use !claudekit pattern
+- ✅ [Task 47 (1.15)] Remove complex bash blocks from Step 1
+- ✅ [Task 48 (1.16)] Update to declarative guidance following execute.md pattern
+- ✅ [Task 49 (1.17)] Test feedback command with simplified workflow
+
+**Files modified:**
+- `.claude/commands/spec/feedback.md` - Completely refactored to use declarative guidance
+
+**Refactoring Summary:**
+- **Before:** 26+ complex bash blocks with BASH_REMATCH, command substitution, heredocs, associative arrays
+- **After:** Clean declarative markdown instructions following execute.md pattern
+- Removed all BASH_REMATCH regex patterns
+- Changed `$(claudekit status stm)` to `!claudekit status stm`
+- Removed all associative arrays (`declare -A DECISIONS`)
+- Removed all heredoc patterns (`cat <<'EOF'`)
+- Replaced with simple declarative instructions that guide Claude to use appropriate tools
+- All 7 workflow steps refactored for clarity and maintainability
+
+**Key Improvements:**
+1. **Step 1:** Simple slug extraction with cut/basename, direct `!claudekit` invocation
+2. **Step 2:** Clear feedback prompting without complex validation scripts
+3. **Step 3:** Task agent integration with clean prompt templates
+4. **Step 4:** Straightforward research-expert invocation pattern
+5. **Step 5:** AskUserQuestion integration without bash variable juggling
+6. **Step 6:** Branching logic described declaratively, not with case statements
+7. **Step 7:** Feedback log creation using Write/Edit tools directly
+
+**Testing:**
+- Command structure validated against execute.md pattern
+- No bash parse errors
+- Clearer for future maintenance
+- Easier for Claude to execute correctly
+
 **Phase 4: Documentation & Testing (Tasks 33-44) ✅ COMPLETE**
 
 **Documentation Tasks (33-38):**
@@ -340,9 +378,55 @@ Since these are markdown-based command instructions (not executable code), the t
 - `docs/guides/feedback-workflow-guide.md` (created) - Comprehensive 500+ line user guide
 - `docs/api/feedback-workflow.md` (created) - Complete API specification with schemas
 
+### Session 6 - 2025-11-21
+
+**Decompose Command Bash Refactoring (Tasks 50-54) ✅ COMPLETE**
+
+- ✅ [Task 50 (2.1)] Refactor incremental mode detection in decompose.md
+- ✅ [Task 51 (2.2)] Simplify changelog parsing logic in decompose.md
+- ✅ [Task 52 (2.3)] Replace associative arrays with declarative guidance
+- ✅ [Task 53 (2.4)] Remove heredocs from STM task creation
+- ✅ [Task 54 (2.5)] Test decompose command with simplified workflow
+
+**Files modified:**
+- `.claude/commands/spec/decompose.md` - Completely refactored all bash sections
+- `specs/add-feedback-workflow-command/02-specification.md` - Added Feedback #2 changelog entry
+- `specs/add-feedback-workflow-command/05-feedback.md` - Logged Feedback #2
+
+**Refactoring Summary:**
+- **Before:** 16 bash blocks with complex patterns (associative arrays, command substitution, heredocs)
+- **After:** Clean declarative markdown instructions following execute.md pattern
+- Removed all associative arrays (`declare -A PRESERVE_TASKS UPDATE_TASKS CREATE_TASKS`)
+- Removed all heredoc patterns (`cat <<'EOF'`)
+- Replaced extensive command substitution throughout
+- Simplified incremental mode detection (lines 58-115)
+- Simplified changelog parsing (lines 129-196)
+- Updated STM task creation examples to avoid bash complexity
+
+**Key Improvements:**
+1. **Incremental Mode Detection:** Replaced complex bash conditionals with declarative decision logic
+2. **Changelog Parsing:** Replaced awk/sed/grep pipelines with Read tool + simple date comparison
+3. **Task Categorization:** Removed associative arrays, provided declarative categorization guidance
+4. **STM Task Creation:** Simplified examples to use direct strings or Write tool pattern
+5. **Overall:** All guidance now declarative, trusting Claude to use appropriate tools
+
+**Testing:**
+- Verified 0 instances of `declare -A` or `cat <<'EOF'`
+- Command structure validated against execute.md pattern
+- Consistent with feedback.md refactoring (Session 5)
+- All three spec commands now use declarative pattern
+
+**Impact:**
+- **Consistency achieved:** execute.md (already clean), feedback.md (Session 5), decompose.md (Session 6)
+- All three core spec workflow commands now follow same declarative pattern
+- Easier to maintain, understand, and execute reliably
+- No bash parse errors across the entire spec command suite
+
 ## Session History
 
 - **2025-11-21 Session 1:** Phase 1 Complete - Core Feedback Command (Tasks 1-12)
 - **2025-11-21 Session 2:** Phase 2 Complete - Incremental Decompose (Tasks 13-22)
 - **2025-11-21 Session 3:** Phase 3 Complete - Resume Execution (Tasks 23-32)
 - **2025-11-21 Session 4:** Phase 4 Complete - Documentation & Testing (Tasks 33-44)
+- **2025-11-21 Session 5:** Feedback.md Bash Refactoring (Tasks 45-49)
+- **2025-11-21 Session 6:** Decompose.md Bash Refactoring (Tasks 50-54) - **ALL COMPLETE!**

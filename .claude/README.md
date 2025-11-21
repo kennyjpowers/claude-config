@@ -28,7 +28,17 @@ Transform an ideation document into a validated, implementation-ready specificat
 **Usage**: `/ideate-to-spec docs/ideation/add-proxy-config-to-figma-plugin.md`
 
 ### /spec:feedback
-Process ONE piece of post-implementation feedback with structured workflow. Includes code exploration, optional research, interactive decisions (implement/defer/out-of-scope), spec updates, and feedback logging.
+Process ONE specific piece of post-implementation feedback with a structured 7-step workflow. After manual testing reveals issues or improvement opportunities, this command:
+
+1. Validates prerequisites (implementation must exist)
+2. Collects detailed feedback description
+3. Explores relevant code with targeted investigation
+4. Optionally consults research-expert for solution approaches
+5. Guides through interactive decisions (implement now/defer/out-of-scope)
+6. Updates spec changelog for "implement now" decisions
+7. Creates STM tasks for deferred items or logs rejected feedback
+
+Seamlessly integrates with incremental `/spec:decompose` and resume `/spec:execute` for feedback iteration cycles.
 
 **Usage**: `/spec:feedback specs/add-user-auth/02-specification.md`
 
@@ -41,11 +51,25 @@ Review all documentation to identify what needs to be updated based on a new spe
 
 These commands override ClaudeKit versions with enhanced features:
 
+### /spec:create
+Enhanced with feature-directory awareness and automatic output path detection. Creates specifications in `specs/<slug>/02-specification.md` format instead of flat structure.
+
+**Usage**: `/spec:create Add user authentication with JWT tokens`
+
 ### /spec:decompose
-Enhanced with incremental mode that preserves completed work and creates only new tasks when spec changelog is updated.
+Enhanced with incremental mode that preserves completed work and creates only new tasks when spec changelog is updated. Tags all STM tasks with `feature:<slug>` for filtering.
+
+**Usage**: `/spec:decompose specs/add-user-auth/02-specification.md`
 
 ### /spec:execute
-Enhanced with resume capability that continues from previous sessions, skipping completed work and maintaining implementation history.
+Enhanced with resume capability that continues from previous sessions, skipping completed work and maintaining implementation history. Reads `04-implementation.md` for session continuity.
+
+**Usage**: `/spec:execute specs/add-user-auth/02-specification.md`
+
+### /spec:migrate
+Migrates existing specs from flat structure (`specs/*.md`) to feature-directory structure (`specs/<slug>/02-specification.md`). Tags existing STM tasks with `feature:<slug>`.
+
+**Usage**: `/spec:migrate`
 
 ## Installation
 
@@ -64,7 +88,7 @@ These custom commands complement ClaudeKit's features:
 | Feature | ClaudeKit Provides | This Config Adds |
 |---------|-------------------|------------------|
 | **Agents** | typescript-expert, react-expert, testing-expert, etc. (30+) | (Uses ClaudeKit agents) |
-| **Commands** | /git:commit, /spec:create, /research, etc. (20+) | /ideate, /ideate-to-spec, /spec:progress, /spec:doc-update |
+| **Commands** | /git:commit, /spec:create, /research, etc. (20+) | /ideate, /ideate-to-spec, /spec:feedback, /spec:doc-update |
 | **Hooks** | file-guard, typecheck-changed, lint-changed, etc. (25+) | (Uses ClaudeKit hooks via settings.json) |
 
 ## Maintenance

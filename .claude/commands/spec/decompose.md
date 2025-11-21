@@ -57,68 +57,62 @@ Before creating any STM tasks, confirm your understanding:
 
 0.5. **Incremental Mode Detection**:
 
-   Before starting the full decomposition, check if this is an incremental re-decompose:
+   Determine if this is a first-time decompose, incremental update, or should be skipped.
 
+   **Extract Feature Slug:**
+
+   Extract the slug from the spec path using simple string operations:
+   - If path is `specs/<slug>/02-specification.md` → slug is `<slug>`
+   - Use cut, basename, or dirname to extract
+   - Store slug for use in task file path and STM queries
+
+   Example:
    ```bash
-   # Extract feature slug from spec path
    SPEC_FILE="$ARGUMENTS"
-   SLUG=$(echo "$SPEC_FILE" | sed -E 's|specs/([^/]+)/.*|\1|')
+   SLUG=$(echo "$SPEC_FILE" | cut -d'/' -f2)
    TASKS_FILE="specs/$SLUG/03-tasks.md"
-
-   # Query existing STM tasks
-   EXISTING_TASKS=$(stm list --tags "feature:$SLUG" -f json 2>/dev/null || echo "[]")
-   TASK_COUNT=$(echo "$EXISTING_TASKS" | jq '. | length')
-
-   # Determine mode
-   if [ "$TASK_COUNT" -eq 0 ]; then
-     MODE="full"
-     echo "🆕 First-time decompose - Full mode"
-   elif [ ! -f "$TASKS_FILE" ]; then
-     MODE="full"
-     echo "📄 Tasks file missing - Full mode"
-   else
-     # Extract last decompose timestamp from tasks file
-     LAST_DECOMPOSE=$(grep "Last Decompose:" "$TASKS_FILE" 2>/dev/null | head -1 | sed -E 's/.*: ([0-9]{4}-[0-9]{2}-[0-9]{2}).*/\1/')
-
-     # Check for new changelog entries
-     if [ -z "$LAST_DECOMPOSE" ]; then
-       MODE="full"
-       echo "📄 No decompose timestamp found - Full mode"
-     else
-       # Helper function to check for new changelog entries
-       has_new_changelog_entries() {
-         local spec_file="$1"
-         local since_date="$2"
-
-         # Extract changelog section and check for entries after date
-         awk '/^## 18\. Changelog/,/^## [0-9]+\./' "$spec_file" 2>/dev/null | \
-           grep -E "^\*\*Date:\*\*" | \
-           while read -r line; do
-             entry_date=$(echo "$line" | sed -E 's/.*\*\*Date:\*\* ([0-9]{4}-[0-9]{2}-[0-9]{2}).*/\1/')
-             if [[ "$entry_date" > "$since_date" || "$entry_date" == "$since_date" ]]; then
-               return 0  # Found new entry
-             fi
-           done
-         return 1  # No new entries
-       }
-
-       if has_new_changelog_entries "$SPEC_FILE" "$LAST_DECOMPOSE"; then
-         MODE="incremental"
-         echo "🔄 Changelog changes detected - Incremental mode"
-         echo "   Last decompose: $LAST_DECOMPOSE"
-       else
-         MODE="skip"
-         echo "✅ No changes since last decompose ($LAST_DECOMPOSE)"
-         echo "   To force re-decompose, delete $TASKS_FILE"
-         exit 0
-       fi
-     fi
-   fi
-
-   # Store mode for later use
-   export DECOMPOSE_MODE="$MODE"
-   export LAST_DECOMPOSE_DATE="$LAST_DECOMPOSE"
    ```
+
+   **Determine Decompose Mode:**
+
+   Follow this decision logic to determine which mode to use:
+
+   1. **Check for existing STM tasks:**
+      ```bash
+      stm list --tags "feature:<slug>" -f json
+      ```
+      - If result is empty or `[]` → **Full mode** (first-time decompose)
+      - Display: "🆕 First-time decompose - Full mode"
+
+   2. **Check if task file exists:**
+      - If `specs/<slug>/03-tasks.md` doesn't exist → **Full mode**
+      - Display: "📄 Tasks file missing - Full mode"
+
+   3. **Extract last decompose timestamp:**
+      - Read `specs/<slug>/03-tasks.md`
+      - Find line containing "Last Decompose: YYYY-MM-DD"
+      - Extract the date
+      - If no date found → **Full mode**
+      - Display: "📄 No decompose timestamp found - Full mode"
+
+   4. **Check for new changelog entries:**
+      - Read the spec file's "## 18. Changelog" section
+      - Look for entries with dates >= last decompose date
+      - Compare dates (string comparison works for YYYY-MM-DD format)
+
+      If new entries found:
+      - Mode: **Incremental**
+      - Display: "🔄 Changelog changes detected - Incremental mode"
+      - Display: "   Last decompose: <date>"
+
+      If no new entries:
+      - Mode: **Skip**
+      - Display: "✅ No changes since last decompose (<date>)"
+      - Display: "   To force re-decompose, delete <tasks-file>"
+      - **Exit** (don't proceed with decomposition)
+
+   **Store Mode for Later:**
+   Remember the determined mode (full/incremental/skip) and last decompose date for use in subsequent steps.
 
 1. **Read and Validate Specification**:
    - Read the specified spec file
@@ -134,74 +128,72 @@ Before creating any STM tasks, confirm your understanding:
 
 2.5. **Incremental Mode Processing** (if MODE=incremental):
 
-   When running in incremental mode, perform additional analysis:
+   When running in incremental mode, perform additional analysis to identify what to preserve, update, and create.
 
+   **Get Completed Tasks for Preservation:**
+
+   Query STM for tasks that are already done:
    ```bash
-   # Get completed tasks for preservation
-   get_completed_tasks() {
-     local slug="$1"
-     stm list --tags "feature:$slug" --status done -f json 2>/dev/null | \
-       jq -r '.[] | "\(.tags | map(select(startswith("phase"))) | .[0] // "phase1"):\(.id):\(.title)"'
-   }
+   stm list --tags "feature:<slug>" --status done -f json
+   ```
 
-   COMPLETED_TASKS=$(get_completed_tasks "$SLUG")
+   For each completed task, extract:
+   - Task ID
+   - Phase (from tags like "phase1", "phase2")
+   - Title
 
-   # Extract new changelog entries
-   extract_new_changelog_entries() {
-     local spec_file="$1"
-     local since_date="$2"
+   These tasks will be marked with ✅ DONE in the task breakdown and preserved as-is.
 
-     awk -v date="$since_date" '
-       /^## 18\. Changelog/,/^## [0-9]+\./ {
-         if (/^\*\*Date:\*\*/) {
-           entry_date = $0
-           sub(/.*\*\*Date:\*\* /, "", entry_date)
-           sub(/\*\*.*/, "", entry_date)
-           if (entry_date > date || entry_date == date) {
-             in_entry = 1
-           } else {
-             in_entry = 0
-           }
-         }
-         if (in_entry && !/^## [0-9]+\./) {
-           print
-         }
-       }
-     ' "$spec_file"
-   }
+   **Extract New Changelog Entries:**
 
-   NEW_CHANGELOG=$(extract_new_changelog_entries "$SPEC_FILE" "$LAST_DECOMPOSE_DATE")
+   Read the spec file and identify changelog entries added since the last decompose:
 
-   # Parse changelog entries for structured data
-   parse_changelog_entry() {
-     local entry="$1"
+   1. Use Read tool on `specs/<slug>/02-specification.md`
+   2. Find the "## 18. Changelog" section
+   3. For each changelog entry (marked by ### headers):
+      - Extract the **Date** field
+      - Compare with last decompose date (string comparison works for YYYY-MM-DD)
+      - If date >= last decompose date, this is a new entry
+   4. For new entries, extract key fields:
+      - **Issue:** What problem/feedback is being addressed
+      - **Decision:** What action was chosen (implement/defer/out-of-scope)
+      - **Changes to Specification:** Which sections are affected
+      - **Implementation Impact:** Priority, affected components, blast radius
 
-     # Extract fields
-     ISSUE=$(echo "$entry" | grep "^\*\*Issue:\*\*" | sed 's/^\*\*Issue:\*\* //')
-     DECISION=$(echo "$entry" | grep "^\*\*Decision:\*\*" | sed 's/^\*\*Decision:\*\* //')
-     CHANGES=$(echo "$entry" | awk '/^\*\*Changes to Specification:\*\*/,/^\*\*[A-Z]/ {if (!/^\*\*/) print}')
-     IMPACT=$(echo "$entry" | awk '/^\*\*Implementation Impact:\*\*/,/^\*\*[A-Z]|^$/ {if (!/^\*\*/) print}')
+   **Categorize Existing Tasks:**
 
-     # Output structured
-     echo "ISSUE: $ISSUE"
-     echo "DECISION: $DECISION"
-     echo "CHANGES: $CHANGES"
-     echo "IMPACT: $IMPACT"
-   }
+   Based on the new changelog entries, determine which existing tasks need updates:
 
-   # Categorize existing tasks
-   categorize_tasks() {
-     local slug="$1"
+   1. **Preserve Tasks (✅ DONE):**
+      - All tasks with status "done" in STM
+      - No changes to these tasks
+      - Copy to task breakdown with ✅ marker
 
-     # Get all existing tasks
-     ALL_TASKS=$(stm list --tags "feature:$slug" -f json)
+   2. **Update Tasks (🔄 UPDATED):**
+      - Tasks that are in-progress or pending
+      - Related to components mentioned in changelog "Changes to Specification"
+      - Need updated context from changelog
+      - Mark with 🔄 in task breakdown
+      - Add changelog context to task details
 
-     # Arrays to track categories
-     declare -A PRESERVE_TASKS UPDATE_TASKS CREATE_TASKS
+   3. **Create Tasks (⏳ NEW):**
+      - New work identified in changelog "Implementation Impact"
+      - Not covered by existing tasks
+      - Mark with ⏳ in task breakdown
+      - Create fresh STM tasks
 
-     # Process each existing task
-     echo "$ALL_TASKS" | jq -c '.[]' | while read -r task; do
-       task_id=$(echo "$task" | jq -r '.id')
+   **Categorization Logic:**
+
+   For each existing task (from STM):
+   - If status = "done" → PRESERVE
+   - If status = "in-progress" or "pending":
+     - Check if task's component/file mentioned in changelog
+     - If yes → UPDATE (add changelog context)
+     - If no → PRESERVE (no changes needed)
+
+   For each changelog entry:
+   - Compare "Implementation Impact" → "Affected components" against existing tasks
+   - If component not covered by existing tasks → CREATE new task
        task_status=$(echo "$task" | jq -r '.status')
        task_title=$(echo "$task" | jq -r '.title')
        task_details=$(echo "$task" | jq -r '.details')
@@ -622,115 +614,85 @@ Before creating any STM tasks, confirm your understanding:
    
    **Remember**: The task breakdown document you created has ALL the implementation details. Your job is to COPY those details into STM, not summarize them!
    
+   **Example: Creating a task with complete specification details**
+
+   When creating STM tasks, include ALL implementation details from the task breakdown. Use one of these approaches:
+
+   **Method 1: Direct multi-line string (for shorter content)**
    ```bash
-   # Example: Creating a task with complete specification details
-   
-   # Method 1: Using heredocs for multi-line content
    stm add "Implement auto-checkpoint hook logic" \
-     --description "Build the complete auto-checkpoint functionality with git integration to create timestamped git stashes on Stop events" \
-     --details "$(cat <<'EOF'
-   Technical Requirements:
-   - Check if current directory is git repository using git status
+     --description "Build complete auto-checkpoint functionality with git integration" \
+     --details "Technical Requirements:
+   - Check if current directory is git repository
    - Detect uncommitted changes using git status --porcelain
-   - Create timestamped stash with configurable prefix from config
-   - Apply stash to restore working directory after creation
+   - Create timestamped stash with configurable prefix
+   - Apply stash to restore working directory
    - Handle exit codes properly (0 for success, 1 for errors)
-   
+
    Implementation from specification:
-   ```typescript
-   const hookName = process.argv[2];
-   if (hookName !== 'auto-checkpoint') {
-     console.error(`Unknown hook: ${hookName}`);
-     process.exit(1);
-   }
-   
-   const hookConfig = config.hooks?.['auto-checkpoint'] || {};
-   const prefix = hookConfig.prefix || 'claude';
-   
-   const gitStatus = spawn('git', ['status', '--porcelain'], {
-     stdio: ['ignore', 'pipe', 'pipe']
-   });
-   
-   let stdout = '';
-   gitStatus.stdout.on('data', (data) => stdout += data);
-   
-   gitStatus.on('close', (code) => {
-     if (code !== 0) {
-       console.log('Not a git repository, skipping checkpoint');
-       process.exit(0);
-     }
-     
-     if (!stdout.trim()) {
-       console.log('No changes to checkpoint');
-       process.exit(0);
-     }
-     
-     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-     const message = `${prefix}-checkpoint-${timestamp}`;
-     
-     const stash = spawn('git', ['stash', 'push', '-m', message], {
-       stdio: ['ignore', 'pipe', 'pipe']
-     });
-     
-     stash.on('close', (stashCode) => {
-       if (stashCode !== 0) {
-         console.error('Failed to create checkpoint');
-         process.exit(1);
-       }
-       
-       spawn('git', ['stash', 'apply'], {
-         stdio: 'ignore'
-       }).on('close', () => {
-         console.log(`✅ Checkpoint created: ${message}`);
-         process.exit(0);
-       });
-     });
-   });
-   ```
-   
+   [Copy full code blocks from task breakdown here]
+
    Key implementation notes:
    - Use child_process.spawn for git commands
    - Capture stdout to check for changes
    - Generate ISO timestamp and sanitize for git message
-   - Chain git stash push and apply operations
-   EOF
-   )" \
-     --validation "$(cat <<'EOF'
-   - [ ] Correctly identifies git repositories
-   - [ ] Detects uncommitted changes using git status --porcelain
-   - [ ] Creates checkpoint with format: ${prefix}-checkpoint-${timestamp}
-   - [ ] Restores working directory after stash
-   - [ ] Exits with code 0 on success, 1 on error
-   - [ ] Respects configured prefix from .claudekit/config.json
-   - [ ] Handles missing config file gracefully
-   
-   Test scenarios:
-   1. Run in non-git directory - should exit 0
-   2. Run with no changes - should exit 0
-   3. Run with changes - should create checkpoint
-   4. Run with custom config - should use custom prefix
-   EOF
-   )" \
+   - Chain git stash push and apply operations" \
+     --validation "- Check git repository detection
+   - Verify uncommitted changes detection
+   - Test checkpoint creation format
+   - Confirm working directory restoration
+   - Validate exit codes
+   - Test custom prefix support" \
      --tags "feature:<slug>,phase2,core,high-priority,large" \
      --status pending \
      --deps "35,36"
-   
-   # Method 2: Using temporary files for very large content
-   cat > /tmp/stm-details.txt << 'EOF'
-   [Full technical requirements and implementation details from spec...]
-   EOF
-   
-   cat > /tmp/stm-validation.txt << 'EOF'
-   [Complete acceptance criteria and test scenarios...]
-   EOF
-   
+   ```
+
+   **Method 2: Using Write tool for very large content**
+
+   For tasks with extensive code blocks or very detailed requirements:
+
+   1. Use Write tool to create a temp file with the full details
+   2. Read the file content
+   3. Pass to STM add command
+   4. Clean up temp file
+
+   This avoids bash parsing issues with complex multi-line content.
+
+   ```bash
+   # Create temp files with full content
+   # (Use Write tool in practice, shown as bash here for illustration)
+
+   # Create details file
+   echo "Technical Requirements:
+   - Full requirement 1
+   - Full requirement 2
+
+   Implementation code blocks:
+   [Full code from task breakdown]
+
+   Key notes:
+   - Implementation detail 1
+   - Implementation detail 2" > /tmp/stm-details.txt
+
+   # Create validation file
+   echo "Acceptance Criteria:
+   - Test scenario 1
+   - Test scenario 2
+   - Edge case verification" > /tmp/stm-validation.txt
+
+   # Read files and pass to STM
+   DETAILS=$(cat /tmp/stm-details.txt)
+   VALIDATION=$(cat /tmp/stm-validation.txt)
+
    stm add "Task title" \
      --description "Brief what and why" \
-     --details "$(cat /tmp/stm-details.txt)" \
-     --validation "$(cat /tmp/stm-validation.txt)" \
+     --details "$DETAILS" \
+     --validation "$VALIDATION" \
      --tags "feature:<slug>,appropriate,tags" \
      --status pending
-   
+
+   # Cleanup
    rm /tmp/stm-details.txt /tmp/stm-validation.txt
    ```
    

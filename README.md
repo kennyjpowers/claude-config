@@ -276,6 +276,12 @@ Enhanced version with **session resume capability** that continues from previous
 
 **Resume Mode:** Automatically detects previous sessions and skips completed work, maintaining full implementation history.
 
+**Session Continuity:** When you run `/spec:execute` multiple times on the same spec, it reads `04-implementation.md` to understand what work has already been completed. This allows you to:
+- Work on large features across multiple sessions without re-doing completed tasks
+- Return to implementation after testing/feedback cycles
+- Maintain a complete history of all sessions (Session 1, Session 2, etc.)
+- Seamlessly integrate feedback workflow: implement → test → `/spec:feedback` → `/spec:decompose` (incremental) → `/spec:execute` (resume)
+
 **Track Progress:** `stm list --pretty --tag feature:add-user-auth` (replaces removed `/spec:progress`)
 
 #### /spec:migrate
@@ -461,7 +467,8 @@ This repository implements a complete end-to-end workflow for feature developmen
 2. **Specification** → Validated, implementation-ready spec
 3. **Decomposition** → Tasks broken down with dependencies (uses stm if installed, tags with `feature:<slug>`)
 4. **Implementation** → Iterative execution with stm task tracking via `stm list --pretty --tag feature:<slug>`
-5. **Completion** → Documentation updates and git workflow
+5. **Feedback** → Process post-implementation feedback with structured decisions (implement/defer/out-of-scope)
+6. **Completion** → Documentation updates and git workflow
 
 ## Usage Examples
 
@@ -501,26 +508,52 @@ stm list --pretty --tag feature:add-user-auth-jwt
 # Step 8: Implementation summary created automatically
 # → Creates: specs/add-user-auth-jwt/04-implementation.md
 
-# Step 9: Commit implementation
+# Step 9: Manual testing (discover feedback items)
+# Test the implemented feature manually
+# Identify bugs, improvements, or missing functionality
+
+# Step 10: Process feedback (repeat for each feedback item)
+/spec:feedback specs/add-user-auth-jwt/02-specification.md
+# → Interactive workflow:
+#   1. Describe feedback item
+#   2. Code exploration
+#   3. Optional research
+#   4. Make decision:
+#      - Implement Now: Updates spec changelog
+#      - Defer: Creates STM task for later
+#      - Out of Scope: Logs decision only
+
+# Step 11: If "Implement Now" was chosen, run incremental decompose
+/spec:decompose specs/add-user-auth-jwt/02-specification.md
+# → Incremental mode: preserves completed tasks, creates only new ones
+
+# Step 12: Resume implementation for new tasks
+/spec:execute specs/add-user-auth-jwt/02-specification.md
+# → Resume mode: skips completed work, implements new feedback tasks
+
+# Step 13: Repeat steps 9-12 until all feedback is addressed
+
+# Step 14: Commit implementation
 /git:commit
 # → Creates conventional commit with changes
 
-# Step 10: Update documentation
+# Step 15: Update documentation
 /spec:doc-update specs/add-user-auth-jwt/02-specification.md
 # → Parallel agents review all docs
 # → Identifies outdated content and missing docs
 
-# Step 11: Commit documentation updates
+# Step 16: Commit documentation updates
 /git:commit
 
-# Step 12: Push to remote
+# Step 17: Push to remote
 /git:push
 
 # All documents for this feature are now in: specs/add-user-auth-jwt/
 # ├── 01-ideation.md
 # ├── 02-specification.md
 # ├── 03-tasks.md
-# └── 04-implementation.md
+# ├── 04-implementation.md
+# └── 05-feedback.md
 ```
 
 ### Quick Start (Skip Ideation)
