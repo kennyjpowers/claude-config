@@ -15,10 +15,16 @@ category: workflow
 
 This command bridges the gap between ideation and implementation by transforming an ideation document into a validated, implementation-ready specification. Follow each step sequentially.
 
-### Step 1: Read & Synthesize Ideation Document
+### Step 1: Extract Slug & Read Ideation Document
 
-1. Read the ideation document at the provided path
-2. Extract and synthesize:
+1. **Extract feature slug from the ideation path:**
+   - Input format: `specs/<slug>/01-ideation.md`
+   - Extract: `<slug>`
+   - Store for use in subsequent steps (e.g., for spec output path)
+   - Example: `specs/fix-chat-scroll-bug/01-ideation.md` → slug is `fix-chat-scroll-bug`
+
+2. Read the ideation document at the provided path
+3. Extract and synthesize:
    - **Intent & Assumptions** (Section 1) - What we're building and why
    - **Codebase Map** (Section 3) - Components/modules that will be affected
    - **Root Cause Analysis** (Section 4, if present) - Bug context
@@ -135,16 +141,23 @@ Acceptance criteria:
    - {Key technical constraints}
    - {Main acceptance criteria}
 
+   Output path: specs/{slug}/02-specification.md
    Proceeding with /spec:create...
    ```
 
-2. **Execute `/spec:create`** with the constructed prompt from Step 4
+2. **Execute `/spec:create`** with the constructed prompt from Step 4, appending:
+   ```
 
-3. **Capture the spec file path** from the command output
+   IMPORTANT: Save this specification to: specs/{slug}/02-specification.md
+   ```
+
+   This explicit instruction tells spec:create exactly where to write the file.
+
+3. **Verify the spec file was created at:** `specs/{slug}/02-specification.md`
 
 ### Step 6: Validate the Specification
 
-1. **Execute `/spec:validate`** on the newly created spec file
+1. **Execute `/spec:validate specs/{slug}/02-specification.md`**
 
 2. **Capture validation results:**
    - Completeness score
@@ -159,7 +172,8 @@ Create a comprehensive summary for the user:
 ```markdown
 ## Specification Summary
 
-**Spec Location:** {path/to/spec.md}
+**Feature Slug:** {slug}
+**Spec Location:** specs/{slug}/02-specification.md
 **Validation Status:** {PASS/NEEDS_WORK}
 **Completeness Score:** {score}/10
 
@@ -185,10 +199,12 @@ Create a comprehensive summary for the user:
 
 ### Recommended Next Steps
 
-1. [ ] Review the specification at {spec-path}
+1. [ ] Review the specification at specs/{slug}/02-specification.md
 2. [ ] {If validation failed: Address validation feedback}
-3. [ ] {If validation passed: Execute with /spec:execute {spec-path}}
-4. [ ] {Any follow-up specs needed}
+3. [ ] {If validation passed: Run /spec:decompose specs/{slug}/02-specification.md}
+4. [ ] {Then implement with: /spec:execute specs/{slug}/02-specification.md}
+5. [ ] {Track progress with: stm list --pretty --tag feature:{slug}}
+6. [ ] {Any follow-up specs needed}
 
 ### Deferred Work
 
@@ -200,7 +216,7 @@ Create a comprehensive summary for the user:
 ## Example Usage
 
 ```bash
-/ideate-to-spec docs/ideation/add-proxy-config-to-figma-plugin.md
+/ideate-to-spec specs/add-proxy-config-to-figma-plugin/01-ideation.md
 ```
 
 This will:

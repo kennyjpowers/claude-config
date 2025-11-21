@@ -99,6 +99,35 @@ claudekit list agents
 claudekit list commands
 ```
 
+## Document Organization
+
+All documents related to a feature are organized in a single directory:
+
+```
+specs/
+└── <feature-slug>/
+    ├── 01-ideation.md          # Ideation and research
+    ├── 02-specification.md     # Validated specification
+    ├── 03-tasks.md             # Task breakdown
+    └── 04-implementation.md    # Implementation summary
+```
+
+**Benefits:**
+- All related documents in one place
+- Clear lifecycle progression (01 → 02 → 03 → 04)
+- Easy to find and navigate
+- Git-friendly tracking
+- STM tasks tagged with `feature:<slug>` for filtering
+
+**Example:**
+```
+specs/add-user-auth-jwt/
+├── 01-ideation.md          # Created by /ideate
+├── 02-specification.md     # Created by /ideate-to-spec → /spec:create
+├── 03-tasks.md             # Created by /spec:decompose
+└── 04-implementation.md    # Created by /spec:execute
+```
+
 ## Repository Structure
 
 ```
@@ -348,48 +377,57 @@ This repository implements a complete end-to-end workflow for feature developmen
 ```bash
 # Step 1: Start with ideation
 /ideate Add user authentication with JWT tokens
-# → Creates: docs/ideation/add-user-auth-jwt.md
+# → Creates: specs/add-user-auth-jwt/01-ideation.md
 #   Includes: investigation, research, clarifications
 
 # Step 2: Transform to validated specification
-/ideate-to-spec docs/ideation/add-user-auth-jwt.md
+/ideate-to-spec specs/add-user-auth-jwt/01-ideation.md
 # → User makes decisions interactively
-# → Creates: specs/add-user-auth-jwt.md (validated)
+# → Creates: specs/add-user-auth-jwt/02-specification.md (validated)
 
 # Step 3: Break down into tasks
-/spec:decompose specs/add-user-auth-jwt.md
-# → Creates task breakdown and registers with stm (if installed)
-#   Includes: phased tasks with dependencies
+/spec:decompose specs/add-user-auth-jwt/02-specification.md
+# → Creates: specs/add-user-auth-jwt/03-tasks.md
+# → Creates STM tasks tagged with feature:add-user-auth-jwt
 
 # Step 4: Start implementation
-/spec:execute specs/add-user-auth-jwt.md
+/spec:execute specs/add-user-auth-jwt/02-specification.md
 # → Implements tasks incrementally, updating stm status
 
 # Step 5: Check progress
-stm list --pretty
+stm list --pretty --tag feature:add-user-auth-jwt
 # → Shows: completion %, current phase, task status
-#   Note: Can run this anytime to see real-time progress
+#   Note: Can run this anytime to see real-time progress for this feature
 
 # Step 6: Continue implementing (loop back to step 4 if needed)
-/spec:execute specs/add-user-auth-jwt.md
+/spec:execute specs/add-user-auth-jwt/02-specification.md
 
 # Step 7: Final progress check (should show 100%)
-stm list --pretty
+stm list --pretty --tag feature:add-user-auth-jwt
 
-# Step 8: Commit implementation
+# Step 8: Implementation summary created automatically
+# → Creates: specs/add-user-auth-jwt/04-implementation.md
+
+# Step 9: Commit implementation
 /git:commit
 # → Creates conventional commit with changes
 
-# Step 9: Update documentation
-/spec:doc-update specs/add-user-auth-jwt.md
+# Step 10: Update documentation
+/spec:doc-update specs/add-user-auth-jwt/02-specification.md
 # → Parallel agents review all docs
 # → Identifies outdated content and missing docs
 
-# Step 10: Commit documentation updates
+# Step 11: Commit documentation updates
 /git:commit
 
-# Step 11: Push to remote
+# Step 12: Push to remote
 /git:push
+
+# All documents for this feature are now in: specs/add-user-auth-jwt/
+# ├── 01-ideation.md
+# ├── 02-specification.md
+# ├── 03-tasks.md
+# └── 04-implementation.md
 ```
 
 ### Quick Start (Skip Ideation)
@@ -403,11 +441,27 @@ If you already know what you need:
 # Then follow steps 3-11 above
 ```
 
+### Migrating Existing Specs
+
+If you have specs in the old flat structure:
+
+```bash
+# Migrate all existing specs to new structure
+/spec:migrate
+
+# This will:
+# - Move specs/*.md to specs/<slug>/02-specification.md
+# - Move specs/*-tasks.md to specs/<slug>/03-tasks.md
+# - Move docs/ideation/*.md to specs/<slug>/01-ideation.md
+# - Tag STM tasks with feature:<slug>
+# - Generate migration report
+```
+
 ### Updating Documentation After Implementation
 
 ```bash
 # After implementing a feature via a spec
-/spec:doc-update specs/add-user-auth-jwt.md
+/spec:doc-update specs/add-user-auth-jwt/02-specification.md
 
 # This will:
 # - Launch parallel documentation expert agents

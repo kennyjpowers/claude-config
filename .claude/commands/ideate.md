@@ -18,9 +18,9 @@ Execute this structured engineering workflow for ideation that enforces complete
 ### Step 1: Create Task Slug & Setup
 
 1. Create a URL-safe slug from the task brief (e.g., "fix-chat-scroll-bug")
-2. Create output directory: `mkdir -p docs/ideation`
+2. Create feature directory: `mkdir -p specs/{slug}`
 
-This output directory will be where you create the ideation documenation md file.
+This directory will contain all documents related to this feature throughout its lifecycle (ideation → spec → tasks → implementation).
 
 ### Step 2: Echo & Scope
 
@@ -89,7 +89,7 @@ Record findings under **Research Findings**
 
 ### Step 7: Write ideation document
 
-Create `docs/ideation/{slug}.md` with the following structure:
+Create `specs/{slug}/01-ideation.md` with the following structure:
 
 ```markdown
 # {Task Title}
@@ -144,4 +144,4 @@ Create `docs/ideation/{slug}.md` with the following structure:
 /ideate Fix chat UI auto-scroll bug when messages exceed viewport height
 ```
 
-This will execute the full workflow, creating comprehensive ideation document at `docs/ideation/fix-chat-ui-auto-scroll-bug.md` and guide you through discovery of the task.
+This will execute the full workflow, creating comprehensive ideation document at `specs/fix-chat-ui-auto-scroll-bug/01-ideation.md` and guide you through discovery of the task.
