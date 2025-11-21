@@ -17,9 +17,9 @@ Implementing a comprehensive feedback workflow system that enables structured po
 ## Progress
 
 **Status:** In Progress
-**Tasks Completed:** 12 / 44
+**Tasks Completed:** 22 / 44
 **Last Session:** 2025-11-21
-**Current Phase:** Phase 1 - Core Feedback Command (COMPLETE) → Phase 2 - Incremental Decompose
+**Current Phase:** Phase 2 - Incremental Decompose (COMPLETE) → Phase 3 - Resume Execution
 
 ## Tasks Completed
 
@@ -50,19 +50,49 @@ Implementing a comprehensive feedback workflow system that enables structured po
 - Feedback log creation with auto-numbering
 - Spec changelog updates with structured entries
 
+**Phase 2: Incremental Decompose (Tasks 13-22) ✅ COMPLETE**
+
+- ✅ [Task 13] Add Incremental Mode Detection Logic
+- ✅ [Task 14] Implement Changelog Timestamp Comparison
+- ✅ [Task 15] Implement STM Task Query for Completed Work
+- ✅ [Task 16] Implement Changelog Analysis for Changes
+- ✅ [Task 17] Implement Task Filtering Logic
+- ✅ [Task 18] Implement Task Numbering Continuity
+- ✅ [Task 19] Generate Re-decompose Metadata Section
+- ✅ [Task 20] Update Task Breakdown Format
+- ✅ [Task 21] Create STM Tasks for New Work Only
+- ✅ [Task 22] Update Decompose Documentation
+
+**Files created/modified:**
+- `.claude/commands/spec/decompose.md` - Enhanced with incremental mode capabilities
+
+**Notes:**
+- Added mode detection (full/incremental/skip) based on STM tasks and changelog
+- Implemented changelog timestamp comparison and parsing
+- Added task categorization: preserve (done), update (affected), create (new)
+- Task numbering continuity across decompose sessions
+- Re-decompose metadata section with history and change tracking
+- Task status markers: ✅ DONE, 🔄 UPDATED, ⏳ NEW
+- STM integration: update existing tasks, create only new work
+- Comprehensive documentation with examples and troubleshooting
+
 ## Tasks In Progress
 
-(None - moving to Phase 2)
+(None - moving to Phase 3)
 
 ## Tasks Pending
 
-- All 44 tasks currently pending in STM
-- Following critical path: Phase 1 → Phase 2 → Phase 3 → Phase 4
+**Phase 3: Resume Execution (Tasks 23-32)**
+- Task 23-32: Enhanced /spec:execute with resume capability
+
+**Phase 4: Documentation & Testing (Tasks 33-44)**
+- Task 33-44: Comprehensive docs, examples, and tests
 
 ## Files Modified/Created
 
 - **Command files:**
   - `.claude/commands/spec/feedback.md` (created) - Complete /spec:feedback command with 7 workflow steps
+  - `.claude/commands/spec/decompose.md` (enhanced) - Added incremental mode with detection, categorization, and metadata
 - **Documentation files:**
   (Phase 4)
 - **Test files:**
@@ -86,22 +116,43 @@ Implementing a comprehensive feedback workflow system that enables structured po
 
 ## Next Steps
 
-- [ ] Complete Task 1: Create /spec:feedback command file structure
-- [ ] Continue through Phase 1 tasks (1.1-1.12)
-- [ ] Test each component as it's built
-- [ ] Move to Phase 2 after Phase 1 complete
+- [x] Complete Phase 1: Core Feedback Command (Tasks 1-12)
+- [x] Complete Phase 2: Incremental Decompose (Tasks 13-22)
+- [ ] Complete Phase 3: Resume Execution (Tasks 23-32)
+- [ ] Complete Phase 4: Documentation & Testing (Tasks 33-44)
 
 ## Implementation Notes
 
-### Session 1 - 2025-11-21
+### Session 1 - 2025-11-21 (Phase 1)
 
-Starting fresh implementation of the feedback workflow system. Strategy:
-- Following critical path through phases 1-4
-- Using specialized agents for each component
-- Running code review after each major component
-- Creating atomic commits for each completed task
-- Building test fixtures early (Task 4.7) to enable testing as we build
+Implemented core `/spec:feedback` command:
+- Created complete workflow with 7 steps
+- Validation, exploration, research integration
+- Interactive decision gathering
+- Feedback log creation and spec changelog updates
+- STM integration with graceful degradation
+
+### Session 2 - 2025-11-21 (Phase 2)
+
+Enhanced `/spec:decompose` with incremental mode:
+- Mode detection logic (full/incremental/skip)
+- Changelog timestamp comparison and parsing
+- Task categorization (preserve/update/create)
+- Task numbering continuity across sessions
+- Re-decompose metadata with history tracking
+- Task status markers (✅ DONE, 🔄 UPDATED, ⏳ NEW)
+- STM integration for updates and new tasks
+- Comprehensive documentation with examples
+
+**Key Features Implemented:**
+1. **Detection**: Checks STM tasks and changelog for changes
+2. **Preservation**: Completed tasks not regenerated
+3. **Updates**: In-progress tasks get changelog context
+4. **Creation**: New tasks for uncovered changelog items
+5. **Numbering**: Sequential task numbers maintained
+6. **Metadata**: Full history of decompose sessions
 
 ## Session History
 
-- **2025-11-21:** Beginning implementation, Session 1 started
+- **2025-11-21 Session 1:** Phase 1 Complete - Core Feedback Command (Tasks 1-12)
+- **2025-11-21 Session 2:** Phase 2 Complete - Incremental Decompose (Tasks 13-22)
