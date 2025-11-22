@@ -421,3 +421,4 @@ stm list --pretty --tag feature:<slug>  # Track progress
 - Enhanced overrides for spec commands
 - Make sure you don't treat specs about writing commands like it's writing code. Commands require writing structured markdown documentation that
   will guide Claude Code, not about writing code.
+- Don't over-engineer command prompts
