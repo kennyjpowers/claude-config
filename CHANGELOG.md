@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/kennyjpowers/claude-flow/compare/v1.0.0...v1.0.1) (2025-11-22)
+
+
+### Bug Fixes
+
+* add publishConfig for public scoped package ([bbc3bf1](https://github.com/kennyjpowers/claude-flow/commit/bbc3bf1ab0a3ae552c66cce9397324b44c883fc0))
+
 # 1.0.0 (2025-11-22)
 
 
