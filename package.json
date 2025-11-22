@@ -1,6 +1,6 @@
 {
   "name": "@33strategies/claudeflow",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Workflow orchestration for Claude Code - seamless end-to-end feature development workflow",
   "keywords": [
     "claude",
