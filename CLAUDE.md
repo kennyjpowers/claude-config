@@ -40,7 +40,8 @@ IDEATION → SPECIFICATION → DECOMPOSITION → IMPLEMENTATION → FEEDBACK →
 - **Command:** `/ideate-to-spec <path-to-ideation>`
 - **Output:** `specs/<slug>/02-specification.md`
 - **Purpose:** Transform ideation into validated technical specification
-- **Process:** Extract decisions → build spec → validate completeness
+- **Process:** Extract decisions → build spec → validate → resolve open questions → re-validate
+- **Interactive:** Automatically detects and resolves open questions using AskUserQuestion tool before completion
 
 ### Phase 3: Decomposition
 - **Command:** `/spec:decompose <path-to-spec>`
@@ -119,6 +120,58 @@ specs/<feature-slug>/
 - Clear lifecycle progression (01 → 02 → 03 → 04)
 - Easy to find related documents
 - Git-friendly tracking
+
+## Workflow Features
+
+### Interactive Question Resolution
+
+The `/ideate-to-spec` command includes automatic open questions resolution to ensure specifications are implementation-ready:
+
+**How It Works:**
+1. After spec creation, system detects "Open Questions" section
+2. Presents each unanswered question interactively with context
+3. Records answers with audit trail (strikethrough format)
+4. Updates spec file incrementally (save-as-you-go)
+5. Re-validates and loops until all questions resolved
+6. Summary shows all resolved questions
+
+**Key Features:**
+- Progress indicators show "Question X of Y"
+- Multi-select support for questions requiring multiple choices
+- Strikethrough format preserves original question context
+- Backward compatible (skips if no questions)
+- Re-entrant (skips already-answered questions)
+- External edit detection prevents data loss
+
+**Backward Compatibility:**
+- Specs without "Open Questions" section skip resolution steps entirely
+- Already-answered questions (containing "Answer:") are skipped automatically
+- Re-entrant: Can run multiple times, only processes unanswered questions
+
+**Error Handling:**
+- Edit failures automatically retry after re-reading spec
+- External edits detected via re-parsing on each loop iteration
+- Validation failures for non-question issues prompt user interactively
+- Manual intervention requested only when automated recovery fails
+
+**Example Workflow:**
+```bash
+/ideate-to-spec specs/my-feature/01-ideation.md
+# → System creates spec via /spec:create
+# → Detects 5 open questions
+# → Presents questions interactively
+# → Question 1 of 5: Package Manager Support?
+# → User answers each question
+# → Spec updated with strikethrough answers
+# → Re-validates until complete
+# → Summary shows 5 questions resolved
+```
+
+**Technical Implementation:**
+- Uses only built-in Claude Code tools (AskUserQuestion, Read, Edit, Grep)
+- No external dependencies or npm packages required
+- Fully integrated with existing ClaudeKit `/spec:validate` command
+- Save-as-you-go approach enables recovery if interrupted
 
 ## Important Conventions
 
@@ -348,6 +401,9 @@ stm list --pretty --tag feature:<slug>  # Track progress
 - **CI/CD:** Automated releases via semantic-release with npm provenance
 - **Platforms:** Full Windows, macOS, Linux support
 - **Package Managers:** Works with npm, yarn, pnpm
+- **Interactive Question Resolution:** Automatic detection and resolution of open questions in `/ideate-to-spec`
+- **Strikethrough Audit Trail:** Questions marked resolved with strikethrough format preserving history
+- **Validation Loop:** Re-validation and iteration until all questions answered
 - **Feedback Workflow:** New `/spec:feedback` command for post-implementation feedback
 - **Incremental Mode:** `/spec:decompose` preserves completed work
 - **Resume Mode:** `/spec:execute` session continuity across runs
@@ -363,3 +419,5 @@ stm list --pretty --tag feature:<slug>  # Track progress
 - Session continuity in `/spec:execute`
 - Migration command `/spec:migrate`
 - Enhanced overrides for spec commands
+- Make sure you don't treat specs about writing commands like it's writing code. Commands require writing structured markdown documentation that
+  will guide Claude Code, not about writing code.

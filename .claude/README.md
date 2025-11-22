@@ -23,9 +23,59 @@ Structured ideation workflow that enforces complete investigation for any code-c
 **Usage**: `/ideate Fix chat UI auto-scroll bug when messages exceed viewport height`
 
 ### /ideate-to-spec
-Transform an ideation document into a validated, implementation-ready specification. Bridges the gap between ideation and implementation.
+Transform an ideation document into a validated, implementation-ready specification. Bridges the gap between ideation and implementation with automatic open questions resolution.
 
-**Usage**: `/ideate-to-spec docs/ideation/add-proxy-config-to-figma-plugin.md`
+**Features:**
+- Extracts decisions from ideation clarifications
+- Builds detailed spec via `/spec:create`
+- **Automatically resolves open questions interactively**
+- Validates completeness via `/spec:validate`
+- Loops until all questions answered
+- Preserves audit trail in spec file
+
+**Interactive Steps:**
+1. Answer ideation clarifications (text-based)
+2. System creates specification
+3. **System detects open questions**
+4. **Answer each question interactively (with context)**
+5. **Spec updated with strikethrough format**
+6. **Re-validation confirms completeness**
+7. Summary shows resolved questions
+
+**Usage**: `/ideate-to-spec specs/<slug>/01-ideation.md`
+
+**Interactive Question Resolution:**
+When the generated specification contains open questions, the system:
+- Parses the "Open Questions" section
+- Presents questions one at a time with progress ("Question 3 of 12")
+- Shows context and available options for each question
+- Supports multi-select questions (e.g., "Which package managers?")
+- Updates spec with strikethrough answers (preserves original context)
+- Re-validates after answering questions
+- Loops until all questions resolved
+- Skips already-answered questions (re-entrant support)
+
+**Key Behaviors:**
+- **Save-as-you-go:** Each answer is saved immediately to the spec file, enabling recovery if interrupted
+- **Backward compatible:** Specs without "Open Questions" sections skip interactive resolution entirely
+- **External edit detection:** Re-parses spec on each iteration to handle manual changes gracefully
+
+**Answer Recording Format:**
+
+Questions are marked as resolved using strikethrough format:
+
+```markdown
+1. ~~**ClaudeKit Version Compatibility**~~ (RESOLVED)
+   **Answer:** Use caret range (^1.0.0)
+   **Rationale:** Automatic updates, test compatibility in CI/CD
+
+   Original context preserved:
+   - Option A: Pin exact version
+   - Option B: Use caret range
+   - Recommendation: Option B
+```
+
+This format provides a complete audit trail showing both the original question and the final decision.
 
 ### /spec:feedback
 Process ONE specific piece of post-implementation feedback with a structured 7-step workflow. After manual testing reveals issues or improvement opportunities, this command:
