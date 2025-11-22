@@ -8,6 +8,12 @@ jobs:
     name: Release to npm (Token Auth)
     runs-on: ubuntu-latest
 
+    # Required permissions for semantic-release
+    permissions:
+      contents: write        # To push tags and create releases
+      issues: write          # To create issues on failure
+      pull-requests: write   # To comment on PRs
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
