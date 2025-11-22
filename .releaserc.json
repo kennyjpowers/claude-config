@@ -10,7 +10,8 @@
         "npmPublish": true,
         "pkgRoot": ".",
         "tarballDir": "dist",
-        "access": "public"
+        "access": "public",
+        "provenance": true
       }
     ],
     [
