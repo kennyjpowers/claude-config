@@ -1819,3 +1819,29 @@ Comprehensive migration guide with:
 1. Review and update lib/setup.js:257 (change claudekit setup flags)
 2. Run `/spec:decompose specs/package-publishing-strategy/02-specification.md` to update task breakdown
 3. Run `/spec:execute specs/package-publishing-strategy/02-specification.md` to implement changes
+
+### 2025-11-21 - Post-Implementation Feedback #2
+
+**Source:** Feedback #2 (see specs/package-publishing-strategy/05-feedback.md)
+
+**Issue:** Update notifications not displaying when running v1.0.1 with v1.1.0 published on npm
+
+**Decision:** Implement with minimal scope
+
+**Changes to Specification:**
+
+- **Section 5.1: bin/claudeflow.js (Entry Point)**
+  - Line 289: Update `updateCheckInterval` from 24 hours to 7 days
+  - Change from: `updateCheckInterval: 1000 * 60 * 60 * 24` to `updateCheckInterval: 1000 * 60 * 60 * 24 * 7`
+  - Rationale: Align with industry standard (npm, yarn, pnpm use 7-day intervals)
+
+**Implementation Impact:**
+- Priority: Low
+- Approach: Option B - Weekly interval (recommended, industry standard)
+- Affected components: bin/claudeflow.js (updateCheckInterval parameter, single value change)
+- Estimated blast radius: LOW - Single file, one parameter change, no downstream dependencies
+
+**Next Steps:**
+1. Review and update bin/claudeflow.js:289 (change updateCheckInterval to 7 days)
+2. Run `/spec:decompose specs/package-publishing-strategy/02-specification.md` to update task breakdown
+3. Run `/spec:execute specs/package-publishing-strategy/02-specification.md` to implement changes

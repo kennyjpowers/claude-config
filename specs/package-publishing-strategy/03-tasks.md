@@ -14,40 +14,41 @@
 | 1 | 2025-11-21 | Full | N/A | 18 | Initial decomposition |
 | 2 | 2025-11-21 | Incremental | 1 | 4 | npm Trusted Publishers (OIDC) migration |
 | 3 | 2025-11-21 | Incremental | 1 | 1 | ClaudeKit setup flag fix |
+| 4 | 2025-11-21 | Incremental | 1 | 1 | Update notification interval change |
 
 ### Current Session Details
 - **Mode**: Incremental
-- **Previous Decompose**: 2025-11-21 (Session 2)
-- **Current Decompose**: 2025-11-21 (Session 3)
+- **Previous Decompose**: 2025-11-21 (Session 3)
+- **Current Decompose**: 2025-11-21 (Session 4)
 - **Changelog Entries Processed**: 1
 
 ### Changelog Entries (New Since Last Decompose)
 
-#### Entry 1: ClaudeKit Setup Flag Fix
+#### Entry 1: Update Notification Interval Change
 - **Date**: 2025-11-21
-- **Issue**: ClaudeKit setup fails for global mode with error: `error: unknown option '--global'`
+- **Issue**: Update notifications not displaying when running v1.0.1 with v1.1.0 published on npm
 - **Decision**: Implement with minimal scope
 - **Changes to Specification**:
-  - Section 5.2: lib/setup.js (Core Installation Logic) - Line 620 update
-  - Change from: `claudekit setup --global` to `claudekit setup --user --yes`
-  - Change from: `claudekit setup` to `claudekit setup --yes`
-  - Add non-interactive mode with `--yes` flag for both installation modes
+  - Section 5.1: bin/claudeflow.js (Entry Point) - Line 289 update
+  - Change from: `updateCheckInterval: 1000 * 60 * 60 * 24` (24 hours)
+  - Change to: `updateCheckInterval: 1000 * 60 * 60 * 24 * 7` (7 days)
+  - Rationale: Align with industry standard (npm, yarn, pnpm use 7-day intervals)
 - **Implementation Impact**:
-  - **Priority**: High
-  - **Affected Components**: lib/setup.js (runClaudeKitSetup function, line 257)
-  - **Blast Radius**: LOW - Single function, one-line fix, no downstream dependencies
-  - **Approach**: Add non-interactive mode (change --global to --user, add --yes for both modes)
-- **Action**: Create Task 1.23 for the fix
+  - **Priority**: Low
+  - **Affected Components**: bin/claudeflow.js (updateCheckInterval parameter, line 289)
+  - **Blast Radius**: LOW - Single file, one parameter change, no downstream dependencies
+  - **Approach**: Update interval to weekly standard
+- **Action**: Create Task 1.24 for the update
 
 ### Task Changes Summary
-- **Preserved**: 15 tasks (completed, no changes needed)
+- **Preserved**: 23 tasks (completed, no changes needed)
 - **Updated**: 0 tasks
-- **Created**: 1 task (1.23 - ClaudeKit setup flag fix)
-- **Total**: 23 tasks
+- **Created**: 1 task (1.24 - Update notification interval change)
+- **Total**: 24 tasks
 
 ### Existing Tasks Status
 
-#### Phase 1: Core npm Package Setup (23 tasks)
+#### Phase 1: Core npm Package Setup (24 tasks)
 - Task 1.1: Create package.json ✅ DONE
 - Task 1.2: Create LICENSE file ✅ DONE
 - Task 1.3: Create .npmignore file ✅ DONE
@@ -59,25 +60,24 @@
 - Task 1.9: Create scripts/verify-files.js ✅ DONE
 - Task 1.10: Update README.md ✅ DONE
 - Task 1.11: Update CHANGELOG.md ✅ DONE
-- Task 1.12: Create .github/workflows/release.yml 🔄 UPDATED
+- Task 1.12: Create .github/workflows/release.yml ✅ DONE
 - Task 1.13: Create .releaserc.json ✅ DONE
 - Task 1.14: Remove install.sh ✅ DONE
 - Task 1.15: Test package locally with npm pack ✅ DONE
-- Task 1.16: Publish to npm with provenance 🔄 UPDATED
-- Task 1.17: Configure npm account for trusted publishers ⏳ NEW
-- Task 1.18: Perform initial token-based publish ⏳ NEW
-- Task 1.19: Switch to OIDC publishing ⏳ NEW
-- Task 1.20: Verify OIDC provenance attestation ⏳ NEW
-- Task 1.21: Verify installation from npm ⏳ PENDING
-- Task 1.22: Notify ClaudeKit maintainer ⏳ PENDING
-- Task 1.23: Fix ClaudeKit setup command flags ⏳ NEW
+- Task 1.16: Publish to npm with provenance ✅ DONE
+- Task 1.17: Configure npm account for trusted publishers ✅ DONE
+- Task 1.18: Perform initial token-based publish ✅ DONE
+- Task 1.19: Switch to OIDC publishing ✅ DONE
+- Task 1.20: Verify OIDC provenance attestation ✅ DONE
+- Task 1.21: Verify installation from npm ✅ DONE
+- Task 1.22: Notify ClaudeKit maintainer ✅ DONE
+- Task 1.23: Fix ClaudeKit setup command flags ✅ DONE
+- Task 1.24: Update notification interval to 7 days ⏳ NEW
 
 ### Execution Recommendations
-1. Complete Task 1.23 (ClaudeKit flag fix) - High priority bug fix
-2. Review updated tasks (1.12, 1.16) for OIDC context
-3. Complete new OIDC tasks before publishing (1.17 → 1.18 → 1.19 → 1.20)
-4. Follow Option A approach: initial token publish, then OIDC migration
-5. Verify provenance after OIDC switch (Task 1.20)
+1. Complete Task 1.24 (Update notification interval) - Low priority enhancement
+2. This is a simple parameter change aligning with industry standards
+3. No dependencies or complex testing required
 
 ---
 
@@ -995,6 +995,99 @@ async function runClaudeKitSetup(mode) {
 - Feedback log: specs/package-publishing-strategy/05-feedback.md #2
 - Console error: `error: unknown option '--global'`
 - Discovered during: Testing claudeflow v1.0.1 setup command
+
+---
+
+### Task 1.24: Update notification interval to 7 days ⏳ NEW
+**Status**: New in Session 4
+**Description**: Change update-notifier check interval from 24 hours to 7 days to align with industry standards
+**Size**: Trivial
+**Priority**: Low
+**Dependencies**: Task 1.5 (bin/claudeflow.js exists)
+**Can run parallel with**: All tasks (independent change)
+**Source**: Feedback #2 from specs/package-publishing-strategy/05-feedback.md
+
+**Technical Requirements**:
+- Update bin/claudeflow.js line 289
+- Change updateCheckInterval parameter from 1 day to 7 days
+- Maintain non-blocking behavior
+- Keep update notification format unchanged
+
+**Current Implementation**:
+```javascript
+// Check for updates (non-blocking)
+const notifier = updateNotifier({ pkg, updateCheckInterval: 1000 * 60 * 60 * 24 }); // Check daily
+```
+
+**Updated Implementation**:
+```javascript
+// Check for updates (non-blocking)
+const notifier = updateNotifier({ pkg, updateCheckInterval: 1000 * 60 * 60 * 24 * 7 }); // Check weekly
+```
+
+**Why This Change**:
+- **Industry Standard**: npm, yarn, and pnpm all use 7-day intervals for update checks
+- **User Experience**: Daily checks can be intrusive and unnecessary
+- **Network Efficiency**: Reduces unnecessary network requests
+- **Best Practice**: Balances keeping users informed vs. being annoying
+- **Alignment**: Follows update-notifier library recommendations
+
+**Research Findings**:
+According to update-notifier documentation and common practice:
+- Default interval: 1 day (24 hours)
+- Recommended interval: 7 days (1 week)
+- npm CLI: Uses 7-day interval
+- yarn: Uses 7-day interval
+- pnpm: Uses 7-day interval
+
+**Implementation Steps**:
+1. Open `bin/claudeflow.js`
+2. Navigate to line 289 (updateNotifier configuration)
+3. Change the interval calculation:
+   - FROM: `1000 * 60 * 60 * 24` (1 day in milliseconds)
+   - TO: `1000 * 60 * 60 * 24 * 7` (7 days in milliseconds)
+4. Update comment to reflect "Check weekly" instead of "Check daily"
+5. Save file
+6. Test update notification behavior
+
+**Testing Plan**:
+1. **Syntax validation**: Run `node -c bin/claudeflow.js`
+2. **Manual interval test**:
+   ```bash
+   # Force update check by deleting cache
+   rm -rf ~/.config/configstore/update-notifier-@33strategies-claudeflow.json
+
+   # Run claudeflow command
+   claudeflow --version
+
+   # Check that notifier doesn't check again for 7 days
+   # (Cache file should show next check date)
+   cat ~/.config/configstore/update-notifier-@33strategies-claudeflow.json
+   ```
+3. **Regression test**: Verify update notifications still display when update available
+4. **Non-blocking test**: Verify commands execute without waiting for update check
+
+**Acceptance Criteria**:
+- [ ] updateCheckInterval set to `1000 * 60 * 60 * 24 * 7` (7 days)
+- [ ] Comment updated to say "Check weekly"
+- [ ] Syntax validation passes
+- [ ] Update check occurs at most once per week
+- [ ] Update notifications still display when available
+- [ ] Command execution not blocked by update check
+- [ ] Aligns with npm/yarn/pnpm behavior
+
+**Risk Assessment**:
+- **Risk Level**: MINIMAL
+- **Blast Radius**: Single parameter, single file
+- **User Impact**: LOW (slight reduction in update notification frequency)
+- **Rollback**: Trivial (revert single value)
+- **Benefits**: Better user experience, reduced network overhead
+
+**Related Issues**:
+- Source: User feedback via `/spec:feedback` command
+- Feedback log: specs/package-publishing-strategy/05-feedback.md #2
+- Issue: Update notifications not displaying (investigation led to interval adjustment)
+- Research: Industry standard analysis confirmed 7-day interval is best practice
 
 ---
 
