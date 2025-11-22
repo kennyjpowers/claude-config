@@ -1,6 +1,6 @@
-# Custom Claude Code Configuration
+# .claude/ Directory
 
-This directory contains custom commands and settings that work alongside ClaudeKit.
+This directory contains custom commands and settings distributed via the **claudeflow** npm package. These commands work alongside ClaudeKit to provide a complete workflow orchestration layer.
 
 ## Structure
 
@@ -11,8 +11,8 @@ This directory contains custom commands and settings that work alongside ClaudeK
 
 This configuration is designed to **layer on top of ClaudeKit**, not replace it:
 
-1. **ClaudeKit** (installed via npm) provides 30+ agents, 20+ commands, and 25+ hooks
-2. **This configuration** adds custom workflow commands specific to your needs
+1. **ClaudeKit** (installed as dependency) provides 30+ agents, 20+ commands, and 25+ hooks
+2. **claudeflow** (this package) adds custom workflow commands specific to feature development
 3. Both work together seamlessly in Claude Code
 
 ## Available Custom Commands
@@ -73,7 +73,87 @@ Migrates existing specs from flat structure (`specs/*.md`) to feature-directory 
 
 ## Installation
 
-See the main README.md in the repository root for installation instructions.
+This configuration is distributed as part of the **claudeflow** npm package.
+
+**Install claudeflow:**
+```bash
+# Using npm (recommended)
+npm install -g @33strategies/claudeflow
+
+# Using yarn
+yarn global add @33strategies/claudeflow
+
+# Using pnpm
+pnpm add -g @33strategies/claudeflow
+```
+
+**Run setup:**
+```bash
+claudeflow setup    # Interactive mode (prompts for global or project)
+```
+
+**Choose installation mode:**
+- **Global:** Install to `~/.claude/` (available in all projects)
+- **Project:** Install to `./.claude/` (this project only)
+
+For detailed installation instructions, see [docs/INSTALLATION_GUIDE.md](../docs/INSTALLATION_GUIDE.md).
+
+## Troubleshooting
+
+If commands aren't loading or you encounter issues, run the diagnostic command:
+
+```bash
+claudeflow doctor
+```
+
+This checks:
+- ✓ Node.js version (requires 22.14+)
+- ✓ npm availability
+- ✓ Claude Code CLI installation
+- ✓ ClaudeKit installation (automatic dependency)
+- ✓ .claude/ directory structure
+- ✓ Command files presence (8/8 required)
+
+The doctor command provides specific recommendations for any issues found.
+
+**Common issues:**
+- **"Commands not loading"** - Run `claudeflow doctor`, restart Claude Code
+- **"ClaudeKit not found"** - Should install automatically; manual: `npm install -g claudekit`
+- **"Node.js too old"** - Requires Node.js 22.14+, install from https://nodejs.org
+
+For comprehensive troubleshooting, see [README.md](../README.md#troubleshooting).
+
+## Migration from install.sh
+
+If you previously installed using install.sh:
+
+1. **Remove old installation:**
+   ```bash
+   # For global installation
+   rm -rf ~/.claude
+
+   # For project installation
+   rm -rf ./.claude
+   ```
+
+2. **Install via npm:**
+   ```bash
+   npm install -g @33strategies/claudeflow
+   ```
+
+3. **Run setup:**
+   ```bash
+   # For global (if you used install.sh user)
+   claudeflow setup --global
+
+   # For project (if you used install.sh project)
+   claudeflow setup --project
+   ```
+
+4. **Verify installation:**
+   ```bash
+   claudeflow doctor
+   ```
 
 ## Customization
 
@@ -93,6 +173,21 @@ These custom commands complement ClaudeKit's features:
 
 ## Maintenance
 
-- Keep ClaudeKit updated: `npm update -g claudekit`
-- Validate custom commands: `claudekit lint-commands`
-- List all available commands: `claudekit list commands`
+**Update claudeflow to latest version:**
+```bash
+# Using npm
+npm update -g @33strategies/claudeflow
+
+# Using yarn
+yarn global upgrade @33strategies/claudeflow
+
+# Using pnpm
+pnpm update -g @33strategies/claudeflow
+```
+
+**Verify installation health:**
+```bash
+claudeflow doctor
+```
+
+**Note:** ClaudeKit is installed automatically as a dependency of claudeflow and will be updated when you update claudeflow.

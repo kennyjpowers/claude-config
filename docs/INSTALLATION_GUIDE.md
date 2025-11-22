@@ -1,14 +1,43 @@
 # Installation Guide
 
-This guide explains when and how to install this configuration repository.
+This guide explains when and how to install claudeflow for Claude Code.
+
+## Prerequisites
+
+Before installing claudeflow, ensure you have the following:
+
+### Required Software
+
+- **Node.js 22.14+** (required by ClaudeKit dependency)
+  - Check version: `node --version`
+  - Install from: https://nodejs.org
+  - Must be 22.14 or higher
+
+- **Package Manager** (npm, yarn, or pnpm)
+  - npm comes bundled with Node.js
+  - yarn: https://yarnpkg.com
+  - pnpm: https://pnpm.io
+
+- **Claude Code CLI** (runtime environment)
+  - Install from: https://code.claude.com
+  - Verify installation: `claude --version`
+
+### Supported Platforms
+
+- ✅ **Windows** (Windows 10+, PowerShell, cmd, Git Bash)
+- ✅ **macOS** (10.15+)
+- ✅ **Linux** (Ubuntu, Debian, Fedora, Arch, and similar distributions)
+
+**Note:** Unlike the previous bash-based installer (install.sh), claudeflow works natively on all platforms including Windows.
 
 ## Installation Modes
 
-The `install.sh` script supports two modes:
+claudeflow supports two installation modes via the `claudeflow setup` command:
 
 ```bash
-./install.sh user      # Install to ~/.claude/ (global)
-./install.sh project   # Install to current project's .claude/
+claudeflow setup --global   # Install to ~/.claude/ (global)
+claudeflow setup --project  # Install to ./.claude/ (project)
+claudeflow setup            # Interactive mode (prompts for choice)
 ```
 
 ## Understanding the Difference
@@ -39,12 +68,37 @@ The `install.sh` script supports two modes:
 - Project-specific workflows
 - Standardizing team practices
 
+## Package Manager Support
+
+claudeflow works with all major Node.js package managers. Choose the one you prefer:
+
+### npm (default)
+```bash
+npm install -g @33strategies/claudeflow
+claudeflow setup
+```
+
+### yarn
+```bash
+yarn global add @33strategies/claudeflow
+claudeflow setup
+```
+
+### pnpm
+```bash
+pnpm add -g @33strategies/claudeflow
+claudeflow setup
+```
+
+**Note:** All three methods install the same package and provide identical functionality. ClaudeKit is installed automatically as a dependency.
+
 ## Decision Guide
 
 ### When to Use User/Global Installation
 
 ```bash
-./install.sh user
+npm install -g @33strategies/claudeflow
+claudeflow setup --global
 ```
 
 **Use this if**:
@@ -62,9 +116,13 @@ The `install.sh` script supports two modes:
 ├── commands/
 │   ├── ideate.md
 │   ├── ideate-to-spec.md
-│   ├── spec/
-│   │   ├── progress.md
-│   │   └── doc-update.md
+│   └── spec/
+│       ├── create.md
+│       ├── decompose.md
+│       ├── execute.md
+│       ├── feedback.md
+│       ├── doc-update.md
+│       └── migrate.md
 └── settings.json
 
 Your commands are now available in ALL projects!
@@ -73,8 +131,9 @@ Your commands are now available in ALL projects!
 ### When to Use Project Installation
 
 ```bash
+npm install -g @33strategies/claudeflow
 cd /path/to/your/project
-./install.sh project
+claudeflow setup --project
 ```
 
 **Use this if**:
@@ -93,477 +152,590 @@ your-project/
 │   ├── commands/
 │   │   ├── ideate.md
 │   │   ├── ideate-to-spec.md
-│   │   ├── spec/
-│   │   │   ├── progress.md
-│   │   │   └── doc-update.md
+│   │   └── spec/
+│       ├── create.md
+│       ├── decompose.md
+│       ├── execute.md
+│       ├── feedback.md
+│       ├── doc-update.md
+│       └── migrate.md
 │   └── settings.json
 ├── .gitignore  (updated to ignore settings.local.json)
-└── (other project files)
+├── CLAUDE.md   (project-specific context for AI)
+└── README.md   (documents the workflow for team)
 
-Team members can:
-1. Clone the repo
-2. Install ClaudeKit: npm install -g claudekit
-3. Run: claudekit setup --yes
-4. Start using the commands immediately!
+Team members clone the repo and get the workflow automatically!
 ```
 
-## Can I Use Both?
+### Can I Do Both?
 
-**Yes!** You can install globally AND per-project. Claude Code's configuration hierarchy handles this:
+**Yes!** You can install globally AND in specific projects. They work together via Claude Code's configuration hierarchy:
 
-```
-Priority (highest to lowest):
-1. Project .claude/settings.local.json  (personal, gitignored)
-2. Project .claude/settings.json        (team, committed)
-3. User ~/.claude/settings.json         (personal global)
-```
-
-### Hybrid Approach (Recommended)
-
-**Install globally for personal use**:
 ```bash
-./install.sh user
-```
+# Global installation (personal commands everywhere)
+npm install -g @33strategies/claudeflow
+claudeflow setup --global
 
-**Then install to specific projects for teams**:
-```bash
+# Project installation (team commands for this project)
 cd /path/to/team-project
-./install.sh project
-git add .claude/
-git commit -m "Add team workflow configuration"
+claudeflow setup --project
 ```
 
-**Result**:
-- You have the commands everywhere (global)
-- Team projects have standardized workflows (project-level)
-- Project settings override your global defaults
+**Configuration precedence**:
+1. Local project settings (`.claude/settings.local.json` - gitignored)
+2. Project settings (`.claude/settings.json` - committed)
+3. Global user settings (`~/.claude/settings.json`)
 
-## Common Scenarios
+Project settings override global settings, so team conventions take precedence.
 
-### Scenario 1: Solo Developer
+## Installation Walkthrough
 
-**Your situation**: You work alone on multiple projects
+### User/Global Installation (Step-by-Step)
 
-**Recommendation**:
+1. **Install Node.js 22.14+ if needed**
+   ```bash
+   node --version  # Check version
+   # If < 22.14, install from nodejs.org
+   ```
+
+2. **Install claudeflow**
+   ```bash
+   # Using npm (recommended)
+   npm install -g @33strategies/claudeflow
+
+   # OR using yarn
+   yarn global add @33strategies/claudeflow
+
+   # OR using pnpm
+   pnpm add -g @33strategies/claudeflow
+   ```
+
+3. **Run setup**
+   ```bash
+   claudeflow setup --global
+   ```
+
+4. **Verify installation**
+   ```bash
+   claudeflow doctor
+   ```
+
+   You should see all checks passing:
+   ```
+   ✓ Node.js version - v22.14.0
+   ✓ npm - 10.2.3
+   ✓ Claude Code CLI - 1.0.0
+   ✓ ClaudeKit - 1.0.0
+   ✓ Global (~/.claude/)
+     ✓ Commands directory
+     ✓ Command files - 8/8 found
+   ```
+
+5. **Customize settings (optional)**
+   ```bash
+   # Copy example settings
+   cp ~/.claude/settings.json.example ~/.claude/settings.json
+
+   # Edit with your preferences
+   code ~/.claude/settings.json
+   ```
+
+6. **Start using commands**
+   - Open any project in Claude Code
+   - Type `/ideate` to see the command available
+   - All custom commands work everywhere!
+
+### Project Installation (Step-by-Step)
+
+1. **Install Node.js 22.14+ if needed**
+   ```bash
+   node --version  # Check version
+   # If < 22.14, install from nodejs.org
+   ```
+
+2. **Install claudeflow globally**
+   ```bash
+   npm install -g @33strategies/claudeflow
+   ```
+
+3. **Navigate to your project**
+   ```bash
+   cd /path/to/your/project
+   ```
+
+4. **Run project setup**
+   ```bash
+   claudeflow setup --project
+   ```
+
+5. **Review and customize configuration**
+   ```bash
+   # Review settings
+   cat .claude/settings.json
+
+   # Customize for your team
+   code .claude/settings.json
+
+   # Create project context for AI
+   code CLAUDE.md
+   ```
+
+6. **Add to version control**
+   ```bash
+   # Ensure local settings are gitignored
+   echo ".claude/settings.local.json" >> .gitignore
+   echo "CLAUDE.local.md" >> .gitignore
+
+   # Commit team configuration
+   git add .claude/ CLAUDE.md .gitignore
+   git commit -m "Add claudeflow workflow configuration"
+   git push
+   ```
+
+7. **Document for team members**
+   Add to your project's README.md:
+   ```markdown
+   ## Development Workflow
+
+   This project uses claudeflow for structured feature development.
+
+   **Setup:**
+   ```bash
+   npm install -g @33strategies/claudeflow
+   claudeflow doctor  # Verify installation
+   ```
+
+   **Workflow:**
+   - Start features with `/ideate <description>`
+   - Follow the complete workflow documented in CLAUDE.md
+   ```
+
+8. **Team member onboarding**
+   New team members just need to:
+   ```bash
+   git clone <repo>
+   npm install -g @33strategies/claudeflow
+   claudeflow doctor
+   ```
+   The `.claude/` configuration is already in the repo!
+
+## Diagnostic Command
+
+If you encounter issues at any point, run the diagnostic command:
+
 ```bash
-./install.sh user
+claudeflow doctor
 ```
 
-**Why**: Simple setup, available everywhere, no need for per-project config
+This checks:
+- ✓ Node.js version (requires 22.14+)
+- ✓ npm availability
+- ✓ Claude Code CLI installation
+- ✓ ClaudeKit installation (should be automatic)
+- ✓ Global installation (~/.claude/)
+- ✓ Project installation (./.claude/)
+- ✓ Command files presence (8/8 required commands)
 
----
+**Example output:**
+```
+claudeflow Doctor - Installation Diagnostics
 
-### Scenario 2: Team Lead Standardizing Workflow
+================================================
 
-**Your situation**: You want your team to use these workflows
+✓ Node.js version - v22.14.0
+✓ npm - 10.2.3
+✓ Claude Code CLI - 1.0.0
+✓ ClaudeKit - 1.0.0
 
-**Recommendation**:
-```bash
-cd /path/to/team-project
-./install.sh project
-git add .claude/ CLAUDE.md .gitignore
-git commit -m "Add team workflow configuration"
-git push origin main
+Installation Locations:
+
+✓ Global (~/.claude/)
+  ✓ Commands directory
+  ✓ Command files - 8/8 found
+
+✓ Project (./.claude/)
+  ✓ Commands directory
+  ✓ Command files - 8/8 found
+
+================================================
+
+✓ All checks passed! Installation looks good.
 ```
 
-**Team members do**:
-```bash
-git pull
-npm install -g claudekit
-claudekit setup --yes
-```
-
-**Why**: Configuration is version controlled and shared with the team
-
----
-
-### Scenario 3: Team Member Joining Project
-
-**Your situation**: Project already has `.claude/` configuration
-
-**Recommendation**:
-```bash
-# Just install ClaudeKit, the project config is already there
-npm install -g claudekit
-cd /path/to/project
-claudekit setup --yes
-
-# Optional: Add personal global preferences too
-cd /path/to/claude-config
-./install.sh user
-```
-
-**Why**: Respect team's workflow while adding personal preferences globally
-
----
-
-### Scenario 4: Multiple Teams with Different Workflows
-
-**Your situation**: Work on Team A (uses this workflow) and Team B (uses different workflow)
-
-**Recommendation**:
-```bash
-# Install your preferred workflow globally
-./install.sh user
-
-# Each team project has its own config
-cd /path/to/team-a-project
-./install.sh project  # This workflow
-
-cd /path/to/team-b-project
-# Different configuration, or none at all
-```
-
-**Why**: Global gives you defaults, project-level overrides when needed
-
----
-
-### Scenario 5: Trying It Out
-
-**Your situation**: Want to test this workflow before committing
-
-**Recommendation**:
-```bash
-# Try it in one project first
-cd /path/to/test-project
-./install.sh project
-
-# After testing, if you like it:
-./install.sh user  # Make it global
-```
-
-**Why**: Low-risk experimentation in one project
-
-## Installation Checklist
-
-### For User/Global Installation
-
-- [ ] Clone this repository
-- [ ] Run `./install.sh user`
-- [ ] ClaudeKit will be installed globally
-- [ ] Commands available in all projects
-- [ ] Customize `~/.claude/settings.json` if desired
-
-### For Project/Team Installation
-
-- [ ] Clone this repository
-- [ ] Navigate to your project: `cd /path/to/project`
-- [ ] Run `../claude-config/install.sh project`
-- [ ] Review and customize `.claude/settings.json`
-- [ ] Create/update `CLAUDE.md` with project context
-- [ ] Add to git:
-  ```bash
-  git add .claude/ CLAUDE.md .gitignore
-  git commit -m "Add Claude Code workflow configuration"
-  ```
-- [ ] Document in project README how to set up
+**If checks fail**, the doctor command provides specific recommendations:
+- Node.js < 22.14: Install Node.js 22.14+ from https://nodejs.org
+- ClaudeKit not found: Should install automatically; manual: `npm install -g claudekit`
+- Commands missing: Re-run `claudeflow setup`
+- Claude Code CLI not found: Install from https://code.claude.com
 
 ## Updating After Installation
 
-### Update Global Configuration
+### Update Global Installation
 
 ```bash
-cd /path/to/claude-config
-git pull origin main
-./install.sh user
+# Using npm
+npm update -g @33strategies/claudeflow
+
+# Using yarn
+yarn global upgrade @33strategies/claudeflow
+
+# Using pnpm
+pnpm update -g @33strategies/claudeflow
+
+# Re-run setup if needed
+claudeflow setup --global
 ```
 
 ### Update Project Configuration
 
 ```bash
-cd /path/to/claude-config
-git pull origin main
+# Update the CLI
+npm update -g @33strategies/claudeflow
+
+# Navigate to project
 cd /path/to/your-project
-../claude-config/install.sh project
-git add .claude/
-git commit -m "Update workflow configuration"
-```
 
-### Update ClaudeKit
-
-```bash
-npm update -g claudekit
-```
-
-## Configuration Files Explained
-
-### Files Created by Installation
-
-**User/Global** (`~/.claude/`):
-```
-~/.claude/
-├── commands/          # Your custom commands
-├── settings.json      # Global defaults
-└── CLAUDE.md          # Personal preferences (optional)
-```
-
-**Project** (`.claude/`):
-```
-project/.claude/
-├── commands/          # Team custom commands
-├── settings.json      # Team settings (committed)
-└── settings.local.json # Your personal overrides (gitignored)
-```
-
-### What to Commit to Git (Project Installation)
-
-**DO commit**:
-- `.claude/settings.json` (team settings)
-- `.claude/commands/` (team commands)
-- `CLAUDE.md` (project context)
-- `.gitignore` updates
-
-**DON'T commit**:
-- `.claude/settings.local.json` (personal overrides)
-- `CLAUDE.local.md` (personal notes)
-
-Add to `.gitignore`:
-```gitignore
-.claude/settings.local.json
-CLAUDE.local.md
-```
-
-## Re-Installing & Updates
-
-### ⚠️ Important: Re-Installation Behavior
-
-When you run `./install.sh` on a project that already has commands installed:
-
-**What gets OVERWRITTEN**:
-- Files with the SAME NAME as files in this repo
-- Example: If both have `ideate.md`, this repo's version wins
-
-**What gets PRESERVED**:
-- Files with DIFFERENT NAMES that only exist in the project
-- Example: `team-specific-review.md` stays
-
-### Safety Check (Added in Script)
-
-The install script now shows a warning when re-installing:
-
-```
-⚠️  WARNING: Re-installing will overwrite files with the same names!
-
-Files that will be OVERWRITTEN (same name in both locations):
-  - ideate.md
-  - ideate-to-spec.md
-
-Files that will be PRESERVED (different names):
-  - team-review.md
-  - project-standup.md
-
-Continue with installation? This may overwrite existing files (y/N):
-```
-
-### Best Practices to Avoid Conflicts
-
-#### 1. **Never Modify Base Commands in Projects**
-
-❌ **Bad**:
-```bash
-# In project repo
-nano .claude/commands/ideate.md  # Modifying base command
-git commit -m "Customize ideate"
-```
-
-✅ **Good**:
-```bash
-# In project repo - create NEW command
-cat > .claude/commands/project-ideate.md << 'EOF'
----
-description: Project-specific ideation
----
-[Your custom content]
-EOF
-git commit -m "Add project-specific ideation"
-```
-
-#### 2. **Use Team Fork for Heavy Customization**
-
-If your team needs customized versions of the base commands:
-
-```bash
-# Fork this repo to your team's GitHub
-# Clone the fork
-git clone https://github.com/your-team/claude-config.git
-
-# Customize base commands in the fork
-cd claude-config
-nano .claude/commands/ideate.md  # Modify freely
-
-# Commit to YOUR fork
-git add .
-git commit -m "Customize for team workflow"
-git push
-
-# Team installs from the fork
-./install.sh project
-```
-
-#### 3. **Check Git Status Before Re-Installing**
-
-```bash
-# Before re-installing in a project
-cd /path/to/project
-git status .claude/commands/
-
-# If there are uncommitted changes
-git diff .claude/commands/
-
-# Option A: Commit them first
-git add .claude/commands/
-git commit -m "Save command modifications"
-
-# Option B: Stash them
-git stash push .claude/commands/
-
-# Then re-install
-/path/to/claude-config/install.sh project
-
-# Review what changed
-git diff .claude/
-
-# If you stashed, restore selectively
-git stash list
-git stash show -p stash@{0}
-git stash pop  # or git stash drop if you don't want them
-```
-
-#### 4. **Namespace Project Commands**
-
-Use prefixes to avoid conflicts:
-
-```bash
-# Project-specific commands
-.claude/commands/
-├── project-review.md          # Team's review process
-├── project-deploy.md          # Team's deployment
-├── ideate.md                  # From claude-config (base)
-├── ideate-to-spec.md          # From claude-config (base)
-└── spec/
-    ├── progress.md            # From claude-config (base)
-    └── doc-update.md          # From claude-config (base)
-```
-
-### Team Collaboration Workflow
-
-**Initial Setup** (Team Lead):
-```bash
-# Install to project
-cd /path/to/team-project
-/path/to/claude-config/install.sh project
-
-# Review and commit
-git add .claude/ CLAUDE.md .gitignore
-git commit -m "Add base workflow from claude-config v1.0.0"
-git push
-```
-
-**Team Members Join**:
-```bash
-git pull
-npm install -g claudekit
-claudekit setup --yes
-# Ready to use!
-```
-
-**Adding Team Commands** (Any Team Member):
-```bash
-# Create NEW command (don't modify base)
-cat > .claude/commands/team-standup.md << 'EOF'
----
-description: Generate daily standup report
----
-...
-EOF
-
-git add .claude/commands/team-standup.md
-git commit -m "Add standup command"
-git push
-```
-
-**Updating Base Commands** (Team Lead):
-```bash
-cd /path/to/claude-config
-git pull origin main  # Get updates from this repo
-
-cd /path/to/team-project
-git status .claude/  # Check for uncommitted team changes
-
-# If clean, update
-/path/to/claude-config/install.sh project
-
-# Review changes
-git diff .claude/
+# Re-run project setup
+claudeflow setup --project
 
 # Commit updates
 git add .claude/
-git commit -m "Update base workflow to claude-config v1.1.0"
+git commit -m "Update claudeflow configuration"
 git push
 ```
 
+### Update Notifications
+
+claudeflow automatically checks for updates once per week (every 7 days). When updates are available, you'll see:
+
+```
+╭───────────────────────────────────────────────────╮
+│                                                   │
+│   Update available: 1.3.0                        │
+│   Current version:  1.2.0                        │
+│   Run: npm install -g @33strategies/claudeflow   │
+│                                                   │
+╰───────────────────────────────────────────────────╯
+```
+
+**Update checks:**
+- Run in the background (non-blocking)
+- Check once per week
+- Never prevent commands from running
+
+**Manual update check:**
+```bash
+npm outdated -g @33strategies/claudeflow
+```
+
+## Installation Checklists
+
+### For User/Global Installation
+
+- [ ] Verify Node.js 22.14+ installed (`node --version`)
+- [ ] Install claudeflow globally (`npm install -g @33strategies/claudeflow`)
+- [ ] Run setup (`claudeflow setup --global`)
+- [ ] Verify with doctor command (`claudeflow doctor`)
+- [ ] Check all checks pass
+- [ ] Commands available in all projects
+- [ ] Customize `~/.claude/settings.json` if desired
+- [ ] Test a command in Claude Code (try `/ideate`)
+
+### For Project/Team Installation
+
+- [ ] Verify Node.js 22.14+ installed (`node --version`)
+- [ ] Navigate to project directory
+- [ ] Install claudeflow globally (`npm install -g @33strategies/claudeflow`)
+- [ ] Run project setup (`claudeflow setup --project`)
+- [ ] Review `.claude/settings.json` for team settings
+- [ ] Create/update `CLAUDE.md` with project context
+- [ ] Update `.gitignore`:
+  - [ ] Add `.claude/settings.local.json`
+  - [ ] Add `CLAUDE.local.md`
+- [ ] Commit configuration:
+  ```bash
+  git add .claude/ CLAUDE.md .gitignore
+  git commit -m "Add claudeflow workflow configuration"
+  ```
+- [ ] Document setup in project README.md
+- [ ] Test commands in Claude Code
+- [ ] Share setup instructions with team
+
+## Migration from install.sh (v1.1.0 and earlier)
+
+If you previously used install.sh to install claude-config, follow these steps:
+
+### Step 1: Remove Old Installation
+
+```bash
+# If you used global installation (install.sh user)
+rm -rf ~/.claude
+
+# If you used project installation (install.sh project)
+cd /path/to/project
+rm -rf .claude
+```
+
+### Step 2: Install via npm
+
+```bash
+# Using npm
+npm install -g @33strategies/claudeflow
+
+# OR using yarn
+yarn global add @33strategies/claudeflow
+
+# OR using pnpm
+pnpm add -g @33strategies/claudeflow
+```
+
+### Step 3: Run Setup
+
+```bash
+# Global installation (if you previously used: install.sh user)
+claudeflow setup --global
+
+# Project installation (if you previously used: install.sh project)
+cd /path/to/project
+claudeflow setup --project
+```
+
+### Step 4: Verify Installation
+
+```bash
+claudeflow doctor
+```
+
+You should see all checks passing.
+
+### What Changed?
+
+| Aspect | Old (install.sh) | New (npm package) |
+|--------|------------------|-------------------|
+| **Distribution** | Manual git clone/download | npm registry |
+| **Installation** | `./install.sh user/project` | `claudeflow setup --global/--project` |
+| **Prerequisites** | Bash shell (Unix only) | Node.js 22.14+ (cross-platform) |
+| **Updates** | `git pull && ./install.sh` | `npm update -g claudeflow` |
+| **Diagnostics** | Manual file checks | `claudeflow doctor` |
+| **Notifications** | None | Automatic weekly update checks |
+| **Platforms** | macOS, Linux only | Windows, macOS, Linux |
+| **Package Managers** | N/A | npm, yarn, pnpm |
+| **ClaudeKit** | Manual: `npm install -g claudekit` | Automatic dependency |
+
+### Migration Notes
+
+- **STM Tasks Preserved:** Your existing STM tasks are not affected. Migration only changes the installation method.
+- **Settings Preserved:** If you back up your `settings.json` before removing `.claude/`, you can restore it after setup.
+- **No Breaking Changes:** All commands work exactly the same way.
+
 ## Troubleshooting
 
-### "Commands not available after installation"
+### "Command not found: claudeflow"
 
-**Solution**: Restart your Claude Code session
+**Cause:** npm global bin directory not in PATH, or claudeflow not installed globally
+
+**Solutions:**
 ```bash
-# Exit Claude, then restart
-claude
+# Check if installed
+npm list -g @33strategies/claudeflow
+
+# If not installed
+npm install -g @33strategies/claudeflow
+
+# If installed but not in PATH, find npm global bin directory
+npm bin -g
+# Add that directory to your PATH in ~/.bashrc, ~/.zshrc, or equivalent
 ```
 
-### "Which installation do I have?"
+### "ClaudeKit not found"
 
-**Check user/global**:
+**Cause:** ClaudeKit should install automatically as a dependency but didn't
+
+**Solutions:**
 ```bash
-ls -la ~/.claude/commands/
+# Reinstall claudeflow (will install ClaudeKit)
+npm uninstall -g @33strategies/claudeflow
+npm install -g @33strategies/claudeflow
+
+# Manual installation (if needed)
+npm install -g claudekit
+
+# Verify
+claudekit --version
 ```
 
-**Check current project**:
+### "Commands not loading in Claude Code"
+
+**Causes:**
+- Commands not installed to correct location
+- Claude Code not detecting `.claude/` directory
+- Command files corrupted or missing
+
+**Solutions:**
 ```bash
-ls -la .claude/commands/
+# Run diagnostics
+claudeflow doctor
+
+# Re-run setup
+claudeflow setup --global  # or --project
+
+# Verify files exist
+ls -la ~/.claude/commands/         # For global
+ls -la ./.claude/commands/         # For project
+
+# Restart Claude Code completely
 ```
 
-### "Want to switch from user to project"
+### "Node.js version too old"
 
-No problem! You can have both. They work together via the configuration hierarchy.
+**Cause:** Node.js version < 22.14
 
-### "Accidentally installed to wrong location"
-
-**Remove and reinstall**:
+**Solution:**
 ```bash
-# Remove from wrong location
-rm -rf ~/.claude/commands/ideate*
-rm -rf ~/.claude/commands/spec
+# Check current version
+node --version
 
-# Reinstall to correct location
-./install.sh [user|project]
+# Install Node.js 22.14+ from:
+# https://nodejs.org
+
+# Or use a version manager:
+# nvm (https://github.com/nvm-sh/nvm)
+nvm install 22
+nvm use 22
 ```
 
-## Best Practices
+### Installation hangs or fails
 
-1. **Start global, go project when teaming** - Install globally for yourself, then add to projects when collaborating
+**Solutions:**
+```bash
+# Clear npm cache
+npm cache clean --force
 
-2. **Document team decisions** - If installing at project level, document the workflow in the project README
+# Try with verbose logging
+npm install -g @33strategies/claudeflow --verbose
 
-3. **Use local overrides** - Keep team settings in `settings.json`, personal tweaks in `settings.local.json`
+# Try different package manager
+yarn global add @33strategies/claudeflow
+# OR
+pnpm add -g @33strategies/claudeflow
+```
 
-4. **Version control wisely** - Commit team config, gitignore personal config
+### Permission errors on Unix/macOS
 
-5. **Regular updates** - Update ClaudeKit monthly, update this config when improved commands are released
+**Cause:** Trying to install globally without permissions
+
+**Solutions:**
+```bash
+# Option 1: Use sudo (not recommended)
+sudo npm install -g @33strategies/claudeflow
+
+# Option 2: Fix npm permissions (recommended)
+# Follow: https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally
+
+# Option 3: Use nvm (best practice)
+# Install nvm, then Node.js will install to your home directory
+```
 
 ## Quick Reference
 
 | Situation | Command | Location |
 |-----------|---------|----------|
-| Solo dev, want everywhere | `./install.sh user` | `~/.claude/` |
-| Team project | `./install.sh project` | `./.claude/` |
-| Both | Both commands | Both locations |
-| Update global | `./install.sh user` again | `~/.claude/` |
-| Update project | `./install.sh project` again | `./.claude/` |
-| Remove global | `rm -rf ~/.claude/commands/ideate* ~/.claude/commands/spec` | N/A |
-| Remove project | `rm -rf ./.claude/` | N/A |
+| **First-time install (solo dev)** | `npm install -g @33strategies/claudeflow && claudeflow setup --global` | `~/.claude/` |
+| **First-time install (team project)** | `npm install -g @33strategies/claudeflow && claudeflow setup --project` | `./.claude/` |
+| **Install both modes** | Run both commands above | Both locations |
+| **Check installation** | `claudeflow doctor` | N/A |
+| **Update CLI** | `npm update -g @33strategies/claudeflow` | N/A |
+| **Re-run setup** | `claudeflow setup` | Interactive |
+| **Remove global** | `npm uninstall -g @33strategies/claudeflow && rm -rf ~/.claude/` | N/A |
+| **Remove project** | `rm -rf ./.claude/` | N/A |
+| **Migrate from install.sh** | See "Migration from install.sh" section above | Varies |
+| **Get help** | `claudeflow help` | N/A |
+| **Check version** | `claudeflow version` | N/A |
 
----
+## Best Practices
 
-**Still unsure?** Start with `./install.sh user` - you can always add project-level later!
+### For Solo Developers
+
+1. **Install globally** - Get commands everywhere
+   ```bash
+   npm install -g @33strategies/claudeflow
+   claudeflow setup --global
+   ```
+
+2. **Keep updated** - Let update notifications guide you
+   - Updates check weekly automatically
+   - Run `npm update -g @33strategies/claudeflow` when notified
+
+3. **Customize freely** - Personalize your workflow
+   - Edit `~/.claude/settings.json` for your preferences
+   - Add custom CLAUDE.md context if desired
+
+### For Teams
+
+1. **Install to project** - Standardize across team
+   ```bash
+   cd /path/to/project
+   claudeflow setup --project
+   ```
+
+2. **Commit configuration** - Share workflow with team
+   ```bash
+   git add .claude/ CLAUDE.md .gitignore
+   git commit -m "Add claudeflow configuration"
+   ```
+
+3. **Document in README** - Help new team members
+   - Add setup instructions
+   - Explain the workflow
+   - Link to CLAUDE.md
+
+4. **Use local overrides** - Allow personal preferences
+   - Team: Commit `.claude/settings.json`
+   - Individual: Use `.claude/settings.local.json` (gitignored)
+
+5. **Keep in sync** - Update when workflow improves
+   ```bash
+   npm update -g @33strategies/claudeflow
+   claudeflow setup --project
+   git add .claude/
+   git commit -m "Update claudeflow"
+   ```
+
+### For Both
+
+1. **Run doctor regularly** - Catch issues early
+   ```bash
+   claudeflow doctor
+   ```
+
+2. **Stay updated** - Get new features and fixes
+   - Watch for update notifications (weekly checks)
+   - Update when convenient
+
+3. **Keep ClaudeKit updated** - It's a dependency
+   - Updates automatically with claudeflow
+   - Check version: `claudekit --version`
+
+## Additional Resources
+
+- **Main README:** [README.md](../README.md) - Overview and quick start
+- **Design Rationale:** [docs/DESIGN_RATIONALE.md](DESIGN_RATIONALE.md) - Why this approach works
+- **Setup Guide:** [docs/SETUP_GUIDE.md](SETUP_GUIDE.md) - Detailed configuration
+- **Feedback Workflow:** [docs/guides/feedback-workflow-guide.md](guides/feedback-workflow-guide.md) - Post-implementation feedback
+- **GitHub Issues:** https://github.com/kennyjpowers/claude-flow.git/issues - Report problems
+- **Package Page:** https://www.npmjs.com/package/@33strategies/claudeflow - npm registry
+
+## Need Help?
+
+1. **Run diagnostics:**
+   ```bash
+   claudeflow doctor
+   ```
+
+2. **Check the troubleshooting section** in this guide (above)
+
+3. **Search existing issues:**
+   https://github.com/kennyjpowers/claude-flow.git/issues
+
+4. **Create a new issue:**
+   Include output of `claudeflow doctor` in your report

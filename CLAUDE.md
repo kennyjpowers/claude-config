@@ -1,17 +1,26 @@
-# Claude Config - AI-Assisted Development Workflow
+# claudeflow - AI-Assisted Development Workflow
 
 ## Project Overview
 
-Claude Config is a hybrid configuration system that provides a complete end-to-end feature development lifecycle for AI-assisted development. It layers custom workflow commands on top of ClaudeKit (30+ agents, 20+ commands, 25+ hooks) and Claude Code's official CLI.
+**claudeflow** is a workflow orchestration npm package for Claude Code that provides a complete end-to-end feature development lifecycle for AI-assisted development. It layers custom workflow commands on top of ClaudeKit (30+ agents, 20+ commands, 25+ hooks) and Claude Code's official CLI.
 
 **Version:** 1.2.0 (November 21, 2025)
+**Package:** @33strategies/claudeflow
+**Distribution:** npm, yarn, pnpm
 
 ## Architecture
 
 Three-layer system:
 1. **Claude Code (Official)** - Base CLI, plugin system, MCP integration
 2. **ClaudeKit (npm)** - 30+ specialized agents, workflow commands, intelligent hooks
-3. **Custom Commands (this repo)** - Domain-specific workflow extensions
+3. **claudeflow (npm)** - Domain-specific workflow extensions, end-to-end feature lifecycle
+
+**System Requirements:**
+- Node.js 22.14+ (ClaudeKit dependency requirement)
+- npm/yarn/pnpm (any package manager)
+- Claude Code CLI (runtime environment)
+
+See [docs/INSTALLATION_GUIDE.md](docs/INSTALLATION_GUIDE.md) for detailed prerequisites and installation instructions.
 
 ## Core Workflow
 
@@ -175,23 +184,29 @@ Types: feat, fix, docs, style, refactor, test, chore
 ## Directory Structure
 
 ```
-claude-config/
-├── .claude/
+claudeflow/                    # npm package (@33strategies/claudeflow)
+├── package.json               # npm package metadata
+├── bin/
+│   └── claudeflow.js          # CLI entry point
+├── lib/
+│   ├── setup.js               # Installation logic
+│   ├── doctor.js              # Diagnostics
+│   └── utils/                 # Cross-platform utilities
+├── .claude/                   # Distributed in package
 │   ├── commands/              # Custom slash commands
 │   │   ├── ideate.md
 │   │   ├── ideate-to-spec.md
 │   │   └── spec/              # Spec command overrides
-│   ├── agents/                # Custom agents (uses ClaudeKit)
-│   ├── settings.json          # Project settings (committed)
-│   ├── settings.local.json    # Local overrides (gitignored)
+│   ├── settings.json.example  # Configuration template
 │   └── README.md
 ├── templates/
 │   ├── project-config/        # Team-level templates
 │   └── user-config/           # Personal templates
-├── specs/                     # Feature specifications
+├── specs/                     # Feature specifications (not in package)
 │   └── <feature-slug>/        # Feature directory
 ├── docs/                      # Documentation
-├── install.sh                 # Automated installer
+├── LICENSE                    # MIT License
+├── CHANGELOG.md               # Auto-generated
 └── CLAUDE.md                  # This file
 ```
 
@@ -218,11 +233,30 @@ From `settings.json.example`:
 }
 ```
 
-## Installation Patterns
+## Installation
 
-**User/Global:** `./install.sh user` → Available in all projects
-**Project/Team:** `cd /project && /path/to/install.sh project` → This project only
-**Hybrid:** Both work together via configuration hierarchy
+**Quick Install:**
+```bash
+npm install -g @33strategies/claudeflow
+claudeflow setup                    # Interactive mode
+# OR: claudeflow setup --global     # Install to ~/.claude/
+# OR: claudeflow setup --project    # Install to ./.claude/
+```
+
+**Alternative Package Managers:**
+```bash
+yarn global add @33strategies/claudeflow
+pnpm add -g @33strategies/claudeflow
+```
+
+**Diagnostics:**
+```bash
+claudeflow doctor                   # Verify installation health
+```
+
+**For detailed installation instructions, troubleshooting, and migration from install.sh, see:**
+- [docs/INSTALLATION_GUIDE.md](docs/INSTALLATION_GUIDE.md) - Complete installation guide
+- [README.md](README.md#troubleshooting) - Troubleshooting section
 
 ## Optional Enhancements
 
@@ -232,6 +266,13 @@ npm install -g simple-task-master
 ```
 
 ## Quick Reference
+
+### First-Time Setup
+```bash
+npm install -g @33strategies/claudeflow
+claudeflow setup
+claudeflow doctor    # Verify installation
+```
 
 ### Standard Workflow
 ```bash
@@ -288,18 +329,32 @@ stm list --pretty --tag feature:<slug>  # Track progress
 
 ## Common Issues
 
-**Tasks not showing in STM?** Ensure simple-task-master is installed globally
+**Installation problems?** Run `claudeflow doctor` for diagnostics
+**Commands not loading?** Verify with `claudeflow doctor`, restart Claude Code
+**ClaudeKit not found?** Should install automatically; manual: `npm install -g claudekit`
+**Tasks not showing in STM?** Install simple-task-master: `npm install -g simple-task-master`
 **Hooks not running?** Check settings precedence (local overrides project)
 **Migration needed?** Use `/spec:migrate` to convert old structure
+
+**For comprehensive troubleshooting, see [README.md](README.md#troubleshooting)**
 
 ## Version History
 
 **v1.2.0 (Nov 21, 2025):**
-- New `/spec:feedback` command for post-implementation feedback
-- Incremental `/spec:decompose` mode (preserves completed work)
-- Resume `/spec:execute` mode (session continuity across multiple runs)
-- Feedback log format (`05-feedback.md`)
-- Integration between feedback → incremental decompose → resume execute
+- **Distribution:** Published to npm as @33strategies/claudeflow
+- **Installation:** Cross-platform CLI (`claudeflow setup`) replaces install.sh
+- **Diagnostics:** New `claudeflow doctor` command
+- **Updates:** Automatic weekly update notifications
+- **CI/CD:** Automated releases via semantic-release with npm provenance
+- **Platforms:** Full Windows, macOS, Linux support
+- **Package Managers:** Works with npm, yarn, pnpm
+- **Feedback Workflow:** New `/spec:feedback` command for post-implementation feedback
+- **Incremental Mode:** `/spec:decompose` preserves completed work
+- **Resume Mode:** `/spec:execute` session continuity across runs
+- **Feedback Log:** New `05-feedback.md` format
+- **Integration:** Seamless feedback → decompose → execute loop
+- **License:** MIT License
+- **Security:** npm provenance attestations (SLSA Level 2)
 
 **v1.1.0 (Nov 21, 2025):**
 - Feature-based directory structure

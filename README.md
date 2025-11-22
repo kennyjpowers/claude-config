@@ -1,5 +1,10 @@
 # Claude Config - Hybrid Configuration for Claude Code + ClaudeKit
 
+[![npm version](https://img.shields.io/npm/v/@33strategies/claudeflow.svg)](https://www.npmjs.com/package/@33strategies/claudeflow)
+[![npm downloads](https://img.shields.io/npm/dm/@33strategies/claudeflow.svg)](https://www.npmjs.com/package/@33strategies/claudeflow)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node Version](https://img.shields.io/badge/node-%3E%3D22.14-brightgreen.svg)](https://nodejs.org/)
+
 A comprehensive configuration repository that combines **ClaudeKit**, **custom agents/commands**, and **Claude Code official features** for an optimal AI-assisted development workflow.
 
 ## What This Repository Provides
@@ -47,6 +52,9 @@ All three layers work together seamlessly in Claude Code.
 
 ### Installation
 
+> **Prerequisites:** Node.js 22.14+ (required by ClaudeKit dependency)
+> Check version: `node --version` | Install: https://nodejs.org
+
 Install claudeflow globally via your preferred package manager:
 
 #### npm
@@ -82,7 +90,7 @@ Choose your installation mode:
 - **Both?** → You can do both! They work together via configuration hierarchy.
 
 The setup will:
-1. Check prerequisites (Node.js 20+, npm, Claude Code CLI)
+1. Check prerequisites (Node.js 22.14+, npm, Claude Code CLI)
 2. Verify ClaudeKit installation (installed automatically as dependency)
 3. Copy custom workflow commands to your chosen location
 4. Set up configuration files
@@ -103,7 +111,7 @@ claudeflow doctor
 ```
 
 This diagnostic command checks:
-- Node.js version (need 20+)
+- Node.js version (need 22.14+)
 - npm availability
 - Claude Code CLI installation
 - ClaudeKit installation
@@ -164,6 +172,46 @@ If you previously used the bash script installation:
    ```bash
    claudeflow doctor
    ```
+
+**Note:** Your existing STM tasks will be preserved. The migration only affects the installation method, not your feature work or task data.
+
+### Package Security
+
+claudeflow is published with npm provenance attestations and SLSA Level 2 compliance. All releases are built and published via GitHub Actions with cryptographic verification.
+
+For details on verifying package authenticity, supply chain security, and security best practices, see **[docs/SECURITY.md](docs/SECURITY.md)**.
+
+### Update Management
+
+claudeflow checks for updates automatically once per week (every 7 days). This check runs in the background and doesn't block command execution.
+
+**Manual update check:**
+```bash
+npm outdated -g @33strategies/claudeflow
+```
+
+**When updates are available**, you'll see a notification:
+```
+╭───────────────────────────────────────────────────╮
+│                                                   │
+│   Update available: 1.3.0                        │
+│   Current version:  1.2.0                        │
+│   Run: npm install -g @33strategies/claudeflow   │
+│                                                   │
+╰───────────────────────────────────────────────────╯
+```
+
+**To update:**
+```bash
+# npm
+npm update -g @33strategies/claudeflow
+
+# yarn
+yarn global upgrade @33strategies/claudeflow
+
+# pnpm
+pnpm update -g @33strategies/claudeflow
+```
 
 ## Document Organization
 
