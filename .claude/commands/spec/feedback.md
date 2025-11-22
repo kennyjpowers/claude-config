@@ -2,7 +2,7 @@
 description: Process post-implementation feedback with interactive decisions
 category: workflow
 allowed-tools: Read, Grep, Glob, Write, Edit, Task, AskUserQuestion, Bash(stm:*), Bash(claudekit:status stm)
-argument-hint: "<path-to-spec-file>"
+argument-hint: "<path-to-spec-file-AND-feedback>"
 ---
 
 # Process Post-Implementation Feedback
@@ -12,10 +12,10 @@ Process ONE specific piece of feedback from testing/usage with structured workfl
 ## Command Syntax
 
 ```bash
-/spec:feedback <path-to-spec-file>
+/spec:feedback <path-to-spec-file-AND-feedback>
 
 # Example:
-/spec:feedback specs/add-user-auth/02-specification.md
+/spec:feedback specs/add-user-auth/02-specification.md change the "create todo" button color to blue
 ```
 
 ## Prerequisites
