@@ -1,13 +1,8 @@
 {
-  "name": "claude-config",
-  "version": "1.0.0",
-  "description": "Best practice configuration templates and utilities for Claude Code",
+  "name": "@33strategies/claudeflow",
+  "version": "1.2.0",
+  "description": "Workflow orchestration for Claude Code - end-to-end feature development lifecycle",
   "author": "Kenneth Priester",
-  "repository": "https://github.com/kennethpriester/claude-config",
-  "keywords": [
-    "claude-code",
-    "configuration",
-    "templates",
-    "best-practices"
-  ]
+  "repository": "https://github.com/kennyjpowers/claude-flow.git",
+  "keywords": ["claude-code", "workflow", "orchestration", "automation"]
 }

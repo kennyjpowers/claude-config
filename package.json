@@ -1,0 +1,60 @@
+{
+  "name": "@33strategies/claudeflow",
+  "version": "1.2.0",
+  "description": "Workflow orchestration for Claude Code - end-to-end feature development lifecycle",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "workflow",
+    "orchestration",
+    "ai-assisted-development",
+    "cli",
+    "automation"
+  ],
+  "author": {
+    "name": "Kenneth Priester",
+    "email": "33strategies@duck.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kennyjpowers/claude-flow.git.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kennyjpowers/claude-flow.git/issues"
+  },
+  "homepage": "https://claudeflow.dev",
+  "bin": {
+    "claudeflow": "./bin/claudeflow.js"
+  },
+  "main": "./lib/index.js",
+  "files": [
+    "bin/",
+    "lib/",
+    ".claude/",
+    "templates/",
+    "docs/",
+    "README.md",
+    "CLAUDE.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "claudekit": "^1.0.0",
+    "update-notifier": "^7.0.0"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "semantic-release": "^22.0.0"
+  },
+  "scripts": {
+    "test": "echo 'Tests coming in Phase 2'",
+    "prepublishOnly": "node scripts/verify-files.js"
+  },
+  "type": "module"
+}

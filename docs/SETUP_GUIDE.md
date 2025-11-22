@@ -43,7 +43,7 @@ claudekit --version
 ### Step 2: Clone This Repository
 
 ```bash
-git clone https://github.com/kennethpriester/claude-config.git
+git clone https://github.com/kennyjpowers/claude-flow.git.git
 cd claude-config
 ```
 
@@ -88,7 +88,7 @@ git init
 npm install -g claudekit
 
 # 4. Clone and run installer
-git clone https://github.com/kennethpriester/claude-config.git ~/.claude-config
+git clone https://github.com/kennyjpowers/claude-flow.git.git ~/.claude-config
 ~/.claude-config/install.sh project .
 
 # 5. Customize configuration
@@ -132,7 +132,7 @@ npm install -g claudekit
 [ -d .claude ] && mv .claude .claude.backup
 
 # 3. Clone and run installer
-git clone https://github.com/kennethpriester/claude-config.git ~/.claude-config
+git clone https://github.com/kennyjpowers/claude-flow.git.git ~/.claude-config
 ~/.claude-config/install.sh project .
 
 # 4. Merge with backup (if you had one)
@@ -540,7 +540,7 @@ cat .claude/settings.json | jq .
 
 ## Support
 
-- **This Repository**: [GitHub Issues](https://github.com/kennethpriester/claude-config/issues)
+- **This Repository**: [GitHub Issues](https://github.com/kennyjpowers/claude-flow.git/issues)
 - **ClaudeKit**: [GitHub](https://github.com/carlrannaberg/claudekit) | [Docs](https://docs.claudekit.cc/)
 - **Claude Code**: [Docs](https://docs.claude.com/en/docs/claude-code/)
 

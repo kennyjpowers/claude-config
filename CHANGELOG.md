@@ -4,6 +4,16 @@
 
 ### Added
 
+- **npm Package Distribution** - Published to npm registry as "@33strategies/claudeflow"
+  - Cross-platform CLI installer (replaces install.sh)
+  - Update notifications for new versions via update-notifier
+  - `claudeflow doctor` diagnostic command for troubleshooting
+  - Automated version management via semantic-release
+  - CI/CD testing across npm, yarn, pnpm on Windows, macOS, Linux
+  - Pure Installer architecture (setup command, not wrapper commands)
+  - ESM-based implementation (import/export, Node.js 20+)
+  - ClaudeKit as npm dependency with automatic installation
+
 - **Post-Implementation Feedback Workflow System** - Complete feedback processing lifecycle
   - `/spec:feedback` - New command for structured feedback processing
     - Single-feedback-item workflow with interactive decisions
@@ -39,6 +49,14 @@
   - Session markers with metadata (date, time, trigger, related feedback)
 
 ### Changed
+
+- **Installation Method** - npm/yarn/pnpm package distribution replaces bash script
+  - Distribution: npm package instead of manual git clone/download
+  - Installation: `npm install -g @33strategies/claudeflow` instead of running install.sh
+  - Setup: Interactive `claudeflow setup` with global/project choice
+  - Node.js requirement: Now requires 20+ (aligned with ClaudeKit)
+  - Version management: Fully automated via semantic-release and conventional commits
+  - Updates: Automatic check on command execution with upgrade notifications
 
 - **Enhanced `/spec:decompose`** - Now supports incremental mode (backward compatible)
   - Automatic mode detection via changelog timestamp analysis
@@ -113,6 +131,52 @@ IDEATION → SPECIFICATION → DECOMPOSITION → IMPLEMENTATION
 - `docs/guides/feedback-workflow-guide.md` - Comprehensive user guide
 - `docs/api/feedback-workflow.md` - API specification with schemas
 - `docs/DESIGN_RATIONALE.md` - Design decisions and research
+- `package.json` - npm package metadata
+- `bin/claudeflow.js` - CLI entry point
+- `lib/setup.js` - Installation logic
+- `lib/doctor.js` - Diagnostic command
+- `scripts/verify-files.js` - Pre-publish file verification
+- `LICENSE` - MIT License
+- `.npmignore` - Package exclusion rules
+
+### Removed
+
+- `install.sh` - Replaced by `claudeflow setup` command
+- Bash-specific installation scripts
+
+### Migration from install.sh
+
+For users upgrading from the bash script installation:
+
+1. **Uninstall old version:**
+   ```bash
+   # Global installation
+   rm -rf ~/.claude
+
+   # OR Project installation
+   rm -rf .claude
+   ```
+
+2. **Install via npm:**
+   ```bash
+   npm install -g @33strategies/claudeflow
+   ```
+
+3. **Run setup:**
+   ```bash
+   # Global (if you used install.sh user)
+   claudeflow setup --global
+
+   # OR Project (if you used install.sh project)
+   claudeflow setup --project
+   ```
+
+4. **Verify installation:**
+   ```bash
+   claudeflow doctor
+   ```
+
+See README.md for detailed migration instructions and troubleshooting.
 
 ## [1.1.0] - 2025-11-21
 
@@ -193,5 +257,5 @@ None - this is the initial release.
 
 ---
 
-**Repository:** https://github.com/kennethpriester/claude-config
+**Repository:** https://github.com/kennyjpowers/claude-flow.git
 **License:** MIT

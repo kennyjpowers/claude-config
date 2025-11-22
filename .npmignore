@@ -1,0 +1,24 @@
+# Development files
+.git/
+.github/
+specs/
+.simple-task-master/
+
+# Test files
+test/
+coverage/
+
+# Development docs
+docs/ideation/
+
+# Local files
+*.log
+.DS_Store
+temp.txt
+node_modules/
+
+# Keep these in package (override)
+!README.md
+!CLAUDE.md
+!CHANGELOG.md
+!LICENSE

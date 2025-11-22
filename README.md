@@ -49,7 +49,7 @@ All three layers work together seamlessly in Claude Code.
 
 ```bash
 # Clone this repository
-git clone https://github.com/kennethpriester/claude-config.git
+git clone https://github.com/kennyjpowers/claude-flow.git.git
 cd claude-config
 
 # Choose installation mode:
@@ -91,7 +91,7 @@ This enables `/spec:decompose` and `/spec:execute` to automatically track tasks 
 npm install -g claudekit
 
 # 2. Clone this repo
-git clone https://github.com/kennethpriester/claude-config.git
+git clone https://github.com/kennyjpowers/claude-flow.git.git
 
 # 3. Copy custom configuration to your project
 cd your-project
@@ -790,7 +790,7 @@ cat .claude/settings.json | jq .
 - [Setup Guide](docs/SETUP_GUIDE.md) - Detailed setup instructions
 - [Design Rationale](docs/DESIGN_RATIONALE.md) - Design validation and best practices
 - [Feedback Workflow Guide](docs/guides/feedback-workflow-guide.md) - Complete guide to post-implementation feedback
-- [GitHub Issues](https://github.com/kennethpriester/claude-config/issues) - Report problems
+- [GitHub Issues](https://github.com/kennyjpowers/claude-flow.git/issues) - Report problems
 
 ### Community Resources
 - [Awesome Claude Code](https://github.com/hesreallyhim/awesome-claude-code)

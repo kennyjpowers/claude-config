@@ -65,10 +65,10 @@ Transform the claude-config repository from a bash-based installer (install.sh) 
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kennethpriester/claude-config.git"
+    "url": "https://github.com/kennyjpowers/claude-flow.git.git"
   },
   "bugs": {
-    "url": "https://github.com/kennethpriester/claude-config/issues"
+    "url": "https://github.com/kennyjpowers/claude-flow.git/issues"
   },
   "homepage": "https://claudeflow.dev",
   "bin": {
@@ -257,7 +257,7 @@ node_modules/
   "version": "1.0.0",
   "description": "Best practice configuration templates and utilities for Claude Code",
   "author": "Kenneth Priester",
-  "repository": "https://github.com/kennethpriester/claude-config",
+  "repository": "https://github.com/kennyjpowers/claude-flow.git",
   "keywords": ["claude-code", "configuration", "templates", "best-practices"]
 }
 ```
@@ -269,7 +269,7 @@ node_modules/
   "version": "1.2.0",
   "description": "Workflow orchestration for Claude Code - end-to-end feature development lifecycle",
   "author": "Kenneth Priester",
-  "repository": "https://github.com/kennethpriester/claude-config",
+  "repository": "https://github.com/kennyjpowers/claude-flow.git",
   "keywords": ["claude-code", "workflow", "orchestration", "automation"]
 }
 ```
@@ -401,11 +401,11 @@ INSTALLATION METHODS:
   pnpm add -g @33strategies/claudeflow
 
 DOCUMENTATION:
-  https://github.com/kennethpriester/claude-config
+  https://github.com/kennyjpowers/claude-flow.git
   https://claudeflow.dev (coming soon)
 
 REPORT ISSUES:
-  https://github.com/kennethpriester/claude-config/issues
+  https://github.com/kennyjpowers/claude-flow.git/issues
 `);
 }
 ```

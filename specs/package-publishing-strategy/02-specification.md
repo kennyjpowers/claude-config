@@ -220,10 +220,10 @@ claudeflow/
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kennethpriester/claude-config.git"
+    "url": "https://github.com/kennyjpowers/claude-flow.git.git"
   },
   "bugs": {
-    "url": "https://github.com/kennethpriester/claude-config/issues"
+    "url": "https://github.com/kennyjpowers/claude-flow.git/issues"
   },
   "homepage": "https://claudeflow.dev",
   "bin": {
@@ -360,11 +360,11 @@ INSTALLATION METHODS:
   pnpm add -g claudeflow
 
 DOCUMENTATION:
-  https://github.com/kennethpriester/claude-config
+  https://github.com/kennyjpowers/claude-flow.git
   https://claudeflow.dev (coming soon)
 
 REPORT ISSUES:
-  https://github.com/kennethpriester/claude-config/issues
+  https://github.com/kennyjpowers/claude-flow.git/issues
 `);
 }
 ```
@@ -650,7 +650,7 @@ function printSuccessSummary(mode, targetDir) {
   console.log('  5. Explore commands: ls ' + targetDir + '/commands/\n');
 
   console.log('Documentation:');
-  console.log('  GitHub: https://github.com/kennethpriester/claude-config');
+  console.log('  GitHub: https://github.com/kennyjpowers/claude-flow.git');
   console.log('  Website: https://claudeflow.dev (coming soon)\n');
 }
 ```
@@ -966,7 +966,7 @@ pnpm update -g claudeflow
 2. Check error messages for specific issues
 3. Verify prerequisites (Node.js 18+, npm, Claude Code CLI)
 4. Try reinstalling: `npm uninstall -g claudeflow && npm install -g claudeflow`
-5. Report issue: https://github.com/kennethpriester/claude-config/issues
+5. Report issue: https://github.com/kennyjpowers/claude-flow.git/issues
 
 ---
 
