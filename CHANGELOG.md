@@ -1,3 +1,18 @@
+# [1.1.0](https://github.com/kennyjpowers/claude-flow/compare/v1.0.1...v1.1.0) (2025-11-22)
+
+
+### Bug Fixes
+
+* enable npm provenance for OIDC publishing ([4ded4fc](https://github.com/kennyjpowers/claude-flow/commit/4ded4fc9885d24adfd6db14de3476d35c9b13188))
+* update Node version requirements for semantic-release v25 ([ddc22fa](https://github.com/kennyjpowers/claude-flow/commit/ddc22fa4532281c58d0ab9772113d22b644406c2))
+* update semantic-release to latest with OIDC support ([0440f6a](https://github.com/kennyjpowers/claude-flow/commit/0440f6a444aaa34cff849491d242236e2a5d9153)), closes [semantic-release/npm#1015](https://github.com/semantic-release/npm/issues/1015) [semantic-release/npm#1017](https://github.com/semantic-release/npm/issues/1017)
+* use npm install instead of npm ci for complex dependencies ([22ebc10](https://github.com/kennyjpowers/claude-flow/commit/22ebc10ac6ac6e51a92c4b31f89c431586222718))
+
+
+### Features
+
+* enable OIDC publishing and remove token workflow ([5d1f195](https://github.com/kennyjpowers/claude-flow/commit/5d1f1950d01f8d12f8759cba1d255c17d57b9278))
+
 ## [1.0.1](https://github.com/kennyjpowers/claude-flow/compare/v1.0.0...v1.0.1) (2025-11-22)
 
 
