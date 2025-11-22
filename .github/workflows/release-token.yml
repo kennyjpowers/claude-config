@@ -1,9 +1,7 @@
 name: Release (Token-based - Temporary)
 
 on:
-  push:
-    branches:
-      - feat/initial-publish  # Temporary branch
+  workflow_dispatch:  # Manual trigger to avoid conflicts with main workflow
 
 jobs:
   release:

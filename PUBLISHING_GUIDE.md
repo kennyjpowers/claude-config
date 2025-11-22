@@ -46,31 +46,37 @@ This guide walks you through publishing @33strategies/claudeflow to npm with sec
    - **Value**: [paste token from Step 1]
 4. Click "Add secret"
 
-## Step 3: Create and Push Initial Publish Branch
+## Step 3: Merge Changes to Main and Push
 
-The temporary workflow `.github/workflows/release-token.yml` has already been created. Now trigger it:
+The temporary workflow `.github/workflows/release-token.yml` has already been created and committed. Now merge to main:
 
 ```bash
 # Navigate to project directory
 cd /Users/kennethpriester/src/ai_projects/claude-config  # or claude-flow if renamed
 
-# Commit the temporary workflow
-git add .github/workflows/release-token.yml
-git add PUBLISHING_GUIDE.md
-git add MIGRATION_TO_CLAUDE_FLOW_REPO.md
-git commit -m "chore: add temporary token-based release workflow for initial publish"
+# Switch to main branch
+git checkout main
 
-# Create and push feat/initial-publish branch
-git checkout -b feat/initial-publish
-git push origin feat/initial-publish
+# Merge the feature branch
+git merge feat/package-publishing-strategy
+
+# Push to GitHub
+git push origin main
 ```
 
-## Step 4: Monitor GitHub Actions
+**Note**: The workflow uses `workflow_dispatch` (manual trigger) to avoid conflicts with the regular OIDC workflow. You'll trigger it manually in Step 4.
+
+## Step 4: Manually Trigger the Publish Workflow
 
 1. Go to https://github.com/kennyjpowers/claude-flow/actions
-2. Find the "Release (Token-based - Temporary)" workflow run
-3. Monitor the workflow execution
-4. Wait for completion (should take 2-5 minutes)
+2. Click on "Release (Token-based - Temporary)" workflow in the left sidebar
+3. Click the "Run workflow" button (top right)
+4. Select branch: `main`
+5. Click "Run workflow" (green button)
+6. Monitor the workflow execution as it runs
+7. Wait for completion (should take 2-5 minutes)
+
+**Why Manual Trigger?** Using `workflow_dispatch` prevents conflicts with the regular OIDC workflow and gives you explicit control over when to publish.
 
 ### Expected Output:
 
@@ -151,10 +157,10 @@ claudeflow help
 3. Click "Revoke"
 4. Confirm revocation
 
-### 7.3 Delete Temporary Workflow and Branch
+### 7.3 Delete Temporary Workflow
 
 ```bash
-# Switch to main branch
+# Ensure you're on main branch
 git checkout main
 
 # Pull latest changes (includes new tag from release)
@@ -165,13 +171,9 @@ rm .github/workflows/release-token.yml
 git add .github/workflows/release-token.yml
 git commit -m "chore: remove temporary token-based workflow after successful publish"
 git push origin main
-
-# Delete temporary branch locally
-git branch -d feat/initial-publish
-
-# Delete temporary branch on GitHub
-git push origin --delete feat/initial-publish
 ```
+
+**Note**: The regular `.github/workflows/release.yml` (OIDC workflow) will remain for all future releases.
 
 ## Step 8: Configure npm Trusted Publishers (OIDC)
 
